@@ -71,6 +71,38 @@ if (typeof window !== "undefined" && "speechSynthesis" in window) {
 type Listener = (speaking: boolean) => void;
 const listeners = new Set<Listener>();
 let pending = 0;
+// How many lines are queued, loading or playing. Games wait for this to reach 0 before moving on.
+let active = 0;
+let quietWaiters: (() => void)[] = [];
+function lineDone(mine: number) {
+  if (mine !== gen) return;
+  active = Math.max(0, active - 1);
+  if (!active) quietWaiters.splice(0).forEach((f) => f());
+}
+function resetActive() {
+  active = 0;
+  quietWaiters.splice(0).forEach((f) => f());
+}
+/** Resolves once Pip has finished everything he was saying. */
+export function whenQuiet(): Promise<void> {
+  return active ? new Promise((r) => quietWaiters.push(r)) : Promise.resolve();
+}
+/**
+ * Run fn after at least minMs, and only once Pip has finished talking (plus a short breath),
+ * so the next question never cuts off the praise. Gives up waiting after 10 seconds.
+ */
+export function afterSpeech(fn: () => void, minMs = 0) {
+  setTimeout(() => {
+    let fired = false;
+    const go = () => {
+      if (fired) return;
+      fired = true;
+      setTimeout(fn, 300);
+    };
+    void whenQuiet().then(go);
+    setTimeout(go, 10000);
+  }, minMs);
+}
 let gen = 0; // bumps on cancel so interrupted lines don't stop the mouth early
 function setSpeaking(on: boolean) {
   listeners.forEach((l) => l(on));
@@ -93,6 +125,7 @@ export type SayOptions = {
 
 /** The iPad / browser built-in voice. Used when the AI voice isn't set up or can't be reached. */
 function deviceSay(text: string, opts: SayOptions, mine: number) {
+  active++;
   try {
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
@@ -106,6 +139,7 @@ function deviceSay(text: string, opts: SayOptions, mine: number) {
         pending = Math.max(0, pending - 1);
         if (!pending) setSpeaking(false);
       }
+      lineDone(mine);
       opts.onEnd?.();
     };
     u.onend = done;
@@ -113,6 +147,7 @@ function deviceSay(text: string, opts: SayOptions, mine: number) {
     if (opts.onWord) u.onboundary = (e) => e.name !== "sentence" && opts.onWord!(e.charIndex);
     speechSynthesis.speak(u);
   } catch {
+    lineDone(mine);
     opts.onEnd?.();
   }
 }
@@ -202,6 +237,7 @@ function playBuffer(ctx: AudioContext, buf: AudioBuffer, text: string, opts: Say
     src.onended = () => {
       if (current === src) current = null;
       if (mine === gen && !current) setSpeaking(false);
+      lineDone(mine);
       opts.onEnd?.();
       resolve();
     };
@@ -219,11 +255,13 @@ export function say(text: string, opts: SayOptions = {}) {
     stopCloud();
     pending = 0;
     gen++;
+    resetActive();
     chain = Promise.resolve();
   }
   const mine = gen;
   const ctx = cloud !== "off" ? audioContext() : null;
   if (!ctx) return deviceSay(text, opts, mine);
+  active++;
 
   const speed = Math.round(Math.min(1.2, Math.max(0.7, (opts.rate ?? 0.95) / 0.95)) * 100) / 100;
   const buf = getBuffer(ctx, text, speed);
@@ -232,7 +270,9 @@ export function say(text: string, opts: SayOptions = {}) {
       (b) => playBuffer(ctx, b, text, opts, mine),
       () => {
         // AI voice unavailable: use the device voice for this line.
-        if (mine === gen) deviceSay(text, opts, mine);
+        if (mine !== gen) return;
+        lineDone(mine);
+        deviceSay(text, opts, mine);
       },
     );
   chain = opts.queue ? chain.then(run) : run();
@@ -254,6 +294,7 @@ export function hush() {
   stopCloud();
   pending = 0;
   gen++;
+  resetActive();
   chain = Promise.resolve();
   setSpeaking(false);
 }

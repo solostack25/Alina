@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { dragGhost, inside } from "@/lib/drag";
 import { NUMBER_WORDS, pick, shuffle } from "@/lib/util";
@@ -127,7 +127,7 @@ export default function Feed({ ask, win, miss, level }: GameProps) {
       done.current = true;
       setTimeout(() => {
         win(level >= 4 ? `${NUMBER_WORDS[count]}! I'm so full` : "I'm full! Thank you");
-        setTimeout(start, 2600);
+        afterSpeech(start, 1200);
       }, 700);
     }
     return true;

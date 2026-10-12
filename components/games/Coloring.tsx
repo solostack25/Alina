@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { store } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -231,10 +231,10 @@ export default function Coloring({ ask, win, player }: GameProps) {
                 setDoneOnce(true);
                 win("What a beautiful picture");
               } else say("Beautiful!");
-              setTimeout(() => {
+              afterSpeech(() => {
                 setPageId(null);
                 ask("Coloring", "Pick another picture!");
-              }, 2200);
+              }, 1200);
             }}
           >
             ✅ Done

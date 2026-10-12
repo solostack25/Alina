@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { pick, shuffle, wobble } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -51,7 +51,7 @@ export default function OddOneOut({ ask, win, miss, level }: GameProps) {
     if (it === r.odd) {
       setSolved(true);
       win(`The ${it[1]} is not ${r.group.what}`);
-      setTimeout(start, 3000);
+      afterSpeech(start, 1200);
     } else {
       wobble(el);
       sfx.boop();

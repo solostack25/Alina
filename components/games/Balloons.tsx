@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { pick, wobble } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -61,7 +61,7 @@ export default function Balloons({ ask, win }: GameProps) {
       popped.current++;
       if (popped.current % 3 === 0) {
         win(`You popped ${popped.current} balloons`);
-        setTimeout(newTarget, 1600);
+        afterSpeech(newTarget, 800);
       } else say(pick(["Pop!", "Yes!", `${b.color.name}!`, "Good!"]));
     } else {
       wobble(el);

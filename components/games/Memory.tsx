@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { shuffle } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -69,7 +69,7 @@ export default function Memory({ ask, win, miss, level }: GameProps) {
         if (matched.every((x) => x.done)) {
           finished.current = true;
           win("You found them all");
-          setTimeout(start, 2600);
+          afterSpeech(start, 1200);
         } else say(`Two ${a.word}s!`);
       }, 450);
     } else {

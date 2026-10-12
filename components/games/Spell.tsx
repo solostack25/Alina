@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { soundOf } from "@/lib/letters";
 import { pick, shuffle, wobble } from "@/lib/util";
@@ -59,7 +59,7 @@ export default function Spell({ ask, win, miss, level, name }: GameProps) {
       if (n === text.length) {
         setTimeout(() => {
           win(`${text.split("").join(", ")}. ${text}!${name ? ` ${name} can spell ${text}` : ""}`);
-          setTimeout(start, 3400);
+          afterSpeech(start, 1200);
         }, 500);
       }
     } else {

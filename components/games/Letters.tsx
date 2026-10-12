@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { shuffle, wobble } from "@/lib/util";
 import { LETTERS as ALL } from "@/lib/letters";
@@ -48,7 +48,7 @@ export default function Letters({ ask, win, name }: GameProps) {
     if (c.ok) {
       setSolved(true);
       win(`${c.word}! ${sound}, ${c.word}. ${letter} is for ${c.word}`);
-      setTimeout(start, 3200);
+      afterSpeech(start, 1200);
     } else {
       wobble(el);
       sfx.boop();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { HEROES } from "@/lib/heroes";
 import { LETTERS } from "@/lib/letters";
@@ -167,7 +167,7 @@ export default function SuperCatch(props: GameProps) {
       if (caughtRef.current >= GOAL) {
         paused.current = true;
         live.current.win(`You caught ${NUMBER_WORDS[GOAL]}! Super ${name || "hero"}`);
-        setTimeout(newRound, 3000);
+        afterSpeech(newRound, 1500);
       } else say(NUMBER_WORDS[caughtRef.current], { rate: 1 });
     } else {
       sfx.boop();

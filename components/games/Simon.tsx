@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import type { GameProps } from "../types";
 
@@ -71,7 +71,7 @@ export default function Simon({ ask, win, miss, level }: GameProps) {
       miss();
       setPhase("watch");
       say("Oops! Let's watch again.");
-      setTimeout(() => alive.current && void show(), 1200);
+      afterSpeech(() => alive.current && void show(), 600);
       return;
     }
     pos.current++;
@@ -79,7 +79,7 @@ export default function Simon({ ask, win, miss, level }: GameProps) {
       setPhase("watch");
       win(`You remembered ${seq.current.length}`);
       seq.current = [...seq.current, Math.floor(Math.random() * 4)];
-      setTimeout(() => alive.current && void show(), 2400);
+      afterSpeech(() => alive.current && void show(), 1200);
     }
   };
 

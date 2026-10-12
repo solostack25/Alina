@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { dragGhost } from "@/lib/drag";
 import { pick, shuffle } from "@/lib/util";
@@ -115,7 +115,7 @@ export default function Puzzle({ ask, win, miss, level }: GameProps) {
       done.current = true;
       setTimeout(() => {
         win(`You made the ${name}`);
-        setTimeout(start, 3000);
+        afterSpeech(start, 1500);
       }, 400);
     } else say(pick(["Click!", "It fits!", "Yes!", "Good!"]), { rate: 1 });
     return true;

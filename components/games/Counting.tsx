@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { NUMBER_WORDS, pick, shuffle, wobble } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -57,10 +57,10 @@ export default function Counting({ ask, win, stars }: GameProps) {
     sfx.tick(num);
     say(NUMBER_WORDS[num]);
     if (num === round.n)
-      setTimeout(() => {
+      afterSpeech(() => {
         setChoosing(true);
         ask("How many?", `How many ${round.label}?`);
-      }, 800);
+      }, 300);
   };
 
   const choose = (o: number, el: HTMLElement) => {
@@ -68,7 +68,7 @@ export default function Counting({ ask, win, stars }: GameProps) {
     if (o === round.n) {
       setSolved(true);
       win(`${NUMBER_WORDS[o]} ${round.label}`);
-      setTimeout(start, 2200);
+      afterSpeech(start, 1200);
     } else {
       wobble(el);
       sfx.boop();

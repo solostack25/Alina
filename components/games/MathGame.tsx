@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { NUMBER_WORDS, pick, shuffle, wobble } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -97,7 +97,7 @@ export default function MathGame({ ask, win, miss, level }: GameProps) {
     if (o === r.answer) {
       setSolved(true);
       win(r.kind === "add" ? `${r.a} plus ${r.b} is ${r.answer}` : `${r.a} take away ${r.b} is ${r.answer}`);
-      setTimeout(start, 2800);
+      afterSpeech(start, 1200);
     } else {
       wobble(el);
       sfx.boop();

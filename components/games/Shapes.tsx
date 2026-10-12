@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { say } from "@/lib/voice";
+import { afterSpeech, say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { pick, shuffle, wobble } from "@/lib/util";
 import type { GameProps } from "../types";
@@ -45,7 +45,7 @@ export default function Shapes({ ask, win, stars }: GameProps) {
     if (shape === round.target) {
       setSolved(true);
       win(`That's the ${shape}`);
-      setTimeout(start, 2200);
+      afterSpeech(start, 1200);
     } else {
       wobble(el);
       sfx.boop();
