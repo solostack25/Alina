@@ -403,7 +403,10 @@ button:focus-visible { outline: 5px solid var(--grape); outline-offset: 4px; }
 /* voice picker */
 .voice-row { display: flex; gap: 10px; }
 .voice-row select { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 10px 12px; border-radius: 14px; border: 3px solid #d9d2f5; background: #fff; color: var(--ink); }
-.sheet { max-height: calc(100dvh - 32px); overflow-y: auto; }
+.sheet { max-height: calc(100dvh - 32px); overflow-y: auto; overflow-x: hidden; grid-template-columns: minmax(0, 1fr); width: min(460px, 100%); }
+.sheet > * { min-width: 0; }
+.voice-row select { width: 100%; text-overflow: ellipsis; }
+.voice-row .btn { flex: none; }
 
 /* ---------- Superheroes ---------- */
 .who-banner { position: fixed; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(36, 26, 94, .15) 0%, rgba(36, 26, 94, .55) 55%, rgba(36, 26, 94, .85) 100%), url(/heroes/banner.webp) center 30% / cover no-repeat; animation: bannerDrift 30s ease-in-out infinite alternate; }
