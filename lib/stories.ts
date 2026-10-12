@@ -1,8 +1,8 @@
 // Original read-along stories, written with short sight-word sentences for early readers.
-// "{name}" is the reader's name; "{alina}" is always the birthday girl (the big-sister player).
+// "{name}" is the reader's name; "{alina}" is always the birthday girl (the big-sister player); "{liyana}" her little sister.
 
-export type Page = { art: string; bg: string; text: string };
-export type Story = { id: string; title: string; cover: string; color: string; pages: Page[] };
+export type Page = { art: string; bg: string; text: string; heroes?: ("a" | "l")[]; dark?: boolean };
+export type Story = { id: string; title: string; cover: string; color: string; pages: Page[]; series?: "super" };
 
 export const STORIES: Story[] = [
   {
@@ -65,5 +65,5 @@ export const STORIES: Story[] = [
   },
 ];
 
-export const fill = (s: string, name: string, alina = "Alina") =>
-  s.replaceAll("{name}", name || "you").replaceAll("{alina}", alina || "Alina");
+export const fill = (s: string, name: string, alina = "Alina", liyana = "Liyana") =>
+  s.replaceAll("{name}", name || "you").replaceAll("{alina}", alina || "Alina").replaceAll("{liyana}", liyana || "Liyana");

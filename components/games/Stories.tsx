@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { say, hush } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
-import { STORIES, fill, type Story } from "@/lib/stories";
+import { STORIES as BOOKS, fill, type Story } from "@/lib/stories";
+import { SUPER_STORIES } from "@/lib/superStories";
+import { HEROES } from "@/lib/heroes";
 import { store } from "@/lib/util";
 import type { GameProps } from "../types";
+
+const STORIES = [...SUPER_STORIES, ...BOOKS];
+const DARK = ["#2d2470", "#3a2f8f", "#1f1a55", "#2f5d4d"];
 
 /** Split a sentence into words with their start positions, keeping punctuation attached. */
 function tokenize(text: string) {
@@ -25,9 +30,12 @@ export default function Stories({ ask, win, name }: GameProps) {
   const token = useRef(0);
   const fallback = useRef<ReturnType<typeof setInterval>>(undefined);
   const [alina, setAlina] = useState("Alina");
+  const [liyana, setLiyana] = useState("Liyana");
 
   useEffect(() => {
-    setAlina(store.get("names", { big: "Alina" }).big || "Alina");
+    const n = store.get("names", { big: "Alina", little: "Liyana" });
+    setAlina(n.big || "Alina");
+    setLiyana(n.little || "Liyana");
     ask("Story Time", "Story time! Pick a book.");
     return () => {
       token.current++;
@@ -36,7 +44,7 @@ export default function Stories({ ask, win, name }: GameProps) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const text = story ? fill(story.pages[page]?.text ?? "", name, alina) : "";
+  const text = story ? fill(story.pages[page]?.text ?? "", name, alina, liyana) : "";
   const words = useMemo(() => tokenize(text), [text]);
 
   const read = (t: string) => {
@@ -89,7 +97,7 @@ export default function Stories({ ask, win, name }: GameProps) {
     setStory(s);
     setPage(0);
     setEnded(false);
-    ask(fill(s.title, name, alina), fill(s.title, name, alina));
+    ask(fill(s.title, name, alina, liyana), fill(s.title, name, alina, liyana));
   };
 
   const turn = (d: number) => {
@@ -118,13 +126,31 @@ export default function Stories({ ask, win, name }: GameProps) {
   if (!story) {
     return (
       <div className="stage">
-        <div className="shelf">
-          {STORIES.map((s) => (
-            <button key={s.id} className="book" style={{ ["--book" as string]: s.color }} onClick={() => open(s)}>
-              <span className="book-cover">{s.cover}</span>
-              <span className="book-title">{fill(s.title, name, alina)}</span>
-            </button>
-          ))}
+        <div className="shelf-wrap">
+          <p className="shelf-head">⭐ Super {alina} &amp; Super {liyana} 💖</p>
+          <div className="shelf">
+            {STORIES.filter((s) => s.series === "super").map((s) => (
+              <button key={s.id} className="book super-book" style={{ ["--book" as string]: s.color }} onClick={() => open(s)}>
+                <span className="book-faces" aria-hidden>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={HEROES.big.face} alt="" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={HEROES.little.face} alt="" />
+                  <span className="book-badge">{s.cover}</span>
+                </span>
+                <span className="book-title">{fill(s.title, name, alina, liyana)}</span>
+              </button>
+            ))}
+          </div>
+          <p className="shelf-head">📚 More books</p>
+          <div className="shelf">
+            {STORIES.filter((s) => !s.series).map((s) => (
+              <button key={s.id} className="book" style={{ ["--book" as string]: s.color }} onClick={() => open(s)}>
+                <span className="book-cover">{s.cover}</span>
+                <span className="book-title">{fill(s.title, name, alina, liyana)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -146,8 +172,14 @@ export default function Stories({ ask, win, name }: GameProps) {
   return (
     <div className="stage reader">
       <div className="page" style={{ background: p.bg }} key={page}>
-        <div className="page-art">{p.art}</div>
-        <p className={`page-text${["#2d2470", "#3a2f8f", "#1f1a55", "#2f5d4d"].includes(p.bg) ? " light" : ""}`}>
+        <div className={`page-art${p.heroes?.length ? " with-heroes" : ""}`}>
+          {p.heroes?.map((h, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={h + i} className={`page-hero ${h === "a" ? "hero-a" : "hero-l"}`} src={HEROES[h === "a" ? "big" : "little"].hero} alt="" draggable={false} />
+          ))}
+          <span className="page-emoji">{p.art}</span>
+        </div>
+        <p className={`page-text${p.dark || DARK.includes(p.bg) ? " light" : ""}`}>
           {words.map((w, i) => (
             <button key={i} className={`word${i === hi ? " hi" : ""}`} onClick={() => tapWord(i)}>
               {w.word}
