@@ -5,7 +5,6 @@ import { say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { store } from "@/lib/util";
 import type { GameProps } from "../types";
-import PictureCanvas, { type PicturePage } from "./PictureCanvas";
 
 /** A coloring page: tappable regions (filled by her) plus fixed line details drawn on top. */
 type Region = { id: string; d?: string; shape?: ReactNode };
@@ -97,17 +96,8 @@ const PAGES: ColorPage[] = [
   },
 ];
 
-// Superhero pages: line art made from the family's illustration (see public/coloring).
-const PICTURES: PicturePage[] = [
-  { id: "sisters", label: "Super Sisters", w: 1400, h: 900 },
-  { id: "alina", label: "Super Alina", w: 900, h: 900 },
-  { id: "liyana", label: "Super Liyana", w: 900, h: 900 },
-  { id: "alina-face", label: "Alina's Tiara", w: 900, h: 900 },
-  { id: "liyana-face", label: "Liyana's Flowers", w: 900, h: 900 },
-];
-
-const PALETTE = ["#ff4d5e", "#ff8a3d", "#ffd43b", "#3ccf91", "#3a8dff", "#9b6bff", "#ff8fc7", "#d99a6c", "#f6d3b8", "#8b5a2b", "#2b2350", "#ffffff"];
-const COLOR_NAMES = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "tan", "peach", "brown", "black", "white"];
+const PALETTE = ["#ff4d5e", "#ff8a3d", "#ffd43b", "#3ccf91", "#3a8dff", "#9b6bff", "#ff8fc7", "#8b5a2b", "#2b2350", "#ffffff"];
+const COLOR_NAMES = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "brown", "black", "white"];
 
 export default function Coloring({ ask, win, player }: GameProps) {
   const [pageId, setPageId] = useState<string | null>(null);
@@ -121,14 +111,6 @@ export default function Coloring({ ask, win, player }: GameProps) {
 
   const key = (id: string) => `color:${player}:${id}`;
 
-  const openPicture = (p: PicturePage) => {
-    sfx.flip();
-    setPageId(p.id);
-    setFills(store.get(key(p.id), {}));
-    setDoneOnce(false);
-    ask(p.label, `Let's color ${p.label}! Pick a color, then tap the picture.`);
-  };
-
   const open = (p: ColorPage) => {
     sfx.flip();
     setPageId(p.id);
@@ -137,20 +119,12 @@ export default function Coloring({ ask, win, player }: GameProps) {
     ask(p.label, `Let's color the ${p.label.toLowerCase()}! Pick a color, then tap the picture.`);
   };
 
-  const picture = PICTURES.find((p) => p.id === pageId);
-  const page = PAGES.find((p) => p.id === pageId) ?? picture;
+  const page = PAGES.find((p) => p.id === pageId);
 
   if (!page) {
     return (
       <div className="stage">
         <div className="color-pick">
-          {PICTURES.map((p) => (
-            <button key={p.id} className={`color-thumb hero-thumb${p.id === "sisters" ? " wide" : ""}`} onClick={() => openPicture(p)} aria-label={p.label}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/coloring/${p.id}-lines.png`} alt="" draggable={false} style={{ aspectRatio: `${p.w} / ${p.h}` }} />
-              <span>{p.label}</span>
-            </button>
-          ))}
           {PAGES.map((p) => {
             const saved = store.get<Record<string, string>>(key(p.id), {});
             return (
@@ -170,7 +144,7 @@ export default function Coloring({ ask, win, player }: GameProps) {
     );
   }
 
-  const paint = (id: string | number) => {
+  const paint = (id: string) => {
     const next = { ...fills, [id]: PALETTE[color] };
     setFills(next);
     store.set(key(page.id), next);
@@ -180,18 +154,14 @@ export default function Coloring({ ask, win, player }: GameProps) {
   return (
     <div className="stage coloring">
       <div className="canvas-wrap">
-        {picture ? (
-          <PictureCanvas page={picture} fills={fills} onFill={paint} />
-        ) : (
         <svg className="color-svg" viewBox="0 0 300 300" stroke="#2b2350" strokeWidth="5" strokeLinejoin="round">
-          {"regions" in page && page.regions.map((r) => (
+          {page.regions.map((r) => (
             <g key={r.id} className="region" fill={fills[r.id] ?? "#fff"} onPointerDown={() => paint(r.id)}>
               {r.shape}
             </g>
           ))}
-          <g pointerEvents="none">{"lines" in page && page.lines}</g>
+          <g pointerEvents="none">{page.lines}</g>
         </svg>
-        )}
       </div>
       <div className="palette-col">
         <div className="palette">

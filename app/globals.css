@@ -462,14 +462,3 @@ img.mini { object-fit: cover; padding: 0; border: 3px solid #fff; }
 @keyframes catchYay { 50% { transform: translateY(-14px) scale(1.06); } }
 .catch-hint { position: absolute; left: 50%; bottom: 34%; translate: -50% 0; background: rgba(255, 255, 255, .9); color: var(--ink); font-weight: 900; font-size: 18px; padding: 6px 14px; border-radius: 999px; animation: hintFade 5s forwards; pointer-events: none; z-index: 3; }
 @keyframes hintFade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
-
-/* superhero coloring pages */
-.hero-thumb img { width: 100%; background: #fff; border-radius: 14px; object-fit: contain; }
-.hero-thumb.wide { grid-column: span 2; }
-@media (max-width: 420px) { .hero-thumb.wide { grid-column: auto; } }
-.picture { position: relative; height: 100%; max-width: 100%; max-height: 100%; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 8px 0 var(--lift); touch-action: none; cursor: pointer; }
-.picture canvas, .picture img { position: absolute; inset: 0; width: 100%; height: 100%; }
-.picture img { pointer-events: none; }
-.picture-loading { position: absolute; inset: 0; display: grid; place-items: center; font-size: 60px; animation: bob 1s ease-in-out infinite; }
-.palette { grid-template-columns: repeat(2, 56px); }
-@media (max-aspect-ratio: 1/1) { .palette { grid-template-columns: repeat(6, 48px); } .swatch { width: 48px; height: 48px; } }
