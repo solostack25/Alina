@@ -24,7 +24,7 @@ import Stories from "./games/Stories";
 import Coloring from "./games/Coloring";
 
 const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!", "Amazing!", "So smart!"];
-const DEFAULT_NAMES: Record<Player, string> = { big: "Alina", little: "Sister" };
+const DEFAULT_NAMES: Record<Player, string> = { big: "Alina", little: "Liyana" };
 
 const LITTLE_DOORS: { id: LittleGame; label: string; art: string; cls: string }[] = [
   { id: "balloons", label: "Balloons", art: "🎈", cls: "d1" },
