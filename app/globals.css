@@ -285,7 +285,7 @@ button:focus-visible { outline: 5px solid var(--grape); outline-offset: 4px; }
 .prompt { align-items: center; gap: 4px; }
 
 .home-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 6px; max-width: 1060px; width: 100%; margin: 0 auto; -webkit-overflow-scrolling: touch; }
-.greet { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.greet { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .greet .hello { margin: 0; }
 .acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .act { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 84px; padding: 10px 14px; border-radius: 26px; background: #fff; color: var(--ink); font-family: var(--font-display), system-ui, sans-serif; font-weight: 800; font-size: clamp(18px, 3.2vw, 28px); box-shadow: 0 8px 0 var(--lift); transition: transform .15s; }
@@ -326,7 +326,7 @@ button:focus-visible { outline: 5px solid var(--grape); outline-offset: 4px; }
 .price { position: absolute; bottom: -6px; left: 50%; translate: -50% 0; background: var(--sun); color: var(--ink); font-weight: 900; font-size: 14px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 
 /* ---------- Story Time ---------- */
-.shelf { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; align-content: center; height: 100%; max-width: 900px; margin: 0 auto; overflow-y: auto; padding: 6px; }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 18px; align-content: center; height: 100%; max-width: 900px; margin: 0 auto; overflow-y: auto; padding: 6px; }
 .book { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; aspect-ratio: 3 / 4; border-radius: 10px 26px 26px 10px; background: var(--book); color: #fff; box-shadow: inset 12px 0 0 rgba(0, 0, 0, .18), 0 10px 0 rgba(0, 0, 0, .18); padding: 14px; transition: transform .15s; }
 .book:active { transform: scale(.95); }
 .book-cover { font-size: clamp(64px, 12vw, 96px); line-height: 1; animation: bob 3s ease-in-out infinite; }
@@ -703,3 +703,207 @@ img.mini { object-fit: cover; padding: 0; border: 3px solid #fff; }
 .sticker.img.locked.affordable img { filter: grayscale(.4) opacity(.8); }
 .sticker.first-hero { margin-left: 14px; }
 .sticker.first-hero::before { content: ""; position: absolute; left: -14px; top: 14px; bottom: 14px; width: 4px; border-radius: 4px; background: rgba(255, 255, 255, .6); }
+
+/* =====================================================================
+   Phones: portrait (narrow) and landscape (short). Tablets are unchanged.
+   ===================================================================== */
+.who { justify-content: flex-start; overflow-y: auto; }
+.who .bigtitle { margin-top: auto; }
+.who .gear-link { margin-bottom: auto; }
+.super-book { aspect-ratio: auto; }
+.screen { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* ---------- phone portrait ---------- */
+@media (max-width: 600px) {
+  .screen { padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); padding-top: max(10px, env(safe-area-inset-top, 0px)); }
+  .bar { min-height: 56px; gap: 8px; }
+  .round { width: 54px; height: 54px; font-size: 26px; box-shadow: 0 4px 0 var(--lift); }
+  img.mini { width: 44px; height: 44px; }
+  .stars { font-size: 20px; padding: 6px 12px 6px 10px; gap: 4px; box-shadow: 0 4px 0 var(--lift); }
+  .levelpill { font-size: 18px; padding: 6px 12px; box-shadow: 0 4px 0 rgba(0, 0, 0, .2); }
+  .ask { font-size: clamp(16px, 4.8vw, 22px); padding: 6px 14px; line-height: 1.15; border-radius: 22px; box-shadow: 0 4px 0 var(--lift); }
+
+  /* who's playing */
+  .who { gap: 12px; }
+  .player { min-width: 0; padding: 12px 14px; }
+  .avatar { width: clamp(96px, 34vw, 140px); }
+
+  /* home */
+  .hello { font-size: clamp(24px, 7vw, 32px); }
+  .featured { margin-top: 46px; gap: 50px; }
+  .hero-door { min-height: 116px; border-radius: 26px; }
+  .featured .hero-door-text { max-width: 60%; }
+  .featured .hd-title { font-size: 28px; }
+  .hd-sub { font-size: 14px; }
+  .hero-door img { height: 140%; max-height: 176px; right: 2px; }
+  .door-bot { height: 128%; max-height: 156px; right: 6px; }
+  .race-door-art { width: 42%; bottom: 8px; }
+  .rd-letters { display: none; }
+  .acts { gap: 10px; }
+  .act { border-radius: 22px; font-size: 16px; }
+
+  /* stories */
+  .shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .book { padding: 8px; gap: 6px; }
+  .book-title, .super-book .book-title { font-size: 15px; }
+  .page-nav { gap: 10px; }
+  .arrow { width: 64px; height: 54px; font-size: 24px; }
+  .page-dots { display: none; }
+  .page.illustrated .page-text { font-size: clamp(19px, 5.4vw, 24px); padding: 8px 12px 10px; }
+  .page-text { font-size: clamp(22px, 6vw, 30px); }
+
+  /* space bots workshop: robot on top, parts scroll underneath */
+  .workshop { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(150px, 32vh) minmax(0, 1fr); gap: 10px; }
+  .bot-stand { overflow: hidden; padding: 6px; }
+  .bot-pop { max-height: 100%; }
+  .part-tab { min-width: 54px; font-size: 13px; padding: 6px 4px; }
+  .part-tab span { font-size: 22px; }
+  .part-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+  .blast { padding: 10px; font-size: 22px; }
+
+  /* letter race: a road, not a wall */
+  .race-track { flex: 0 0 auto; height: min(58vh, 440px); margin-top: auto; margin-bottom: auto; }
+  .racer { width: clamp(110px, 32vw, 150px); }
+  .race-pic { top: 56px; right: 8px; }
+
+  /* sticker book */
+  .sticker.img { width: 76px; height: 76px; border-radius: 18px; }
+}
+
+/* ---------- phone landscape (and any short screen) ---------- */
+@media (max-height: 500px) {
+  .screen { padding-top: max(8px, env(safe-area-inset-top, 0px)); padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  .bar { min-height: 50px; gap: 8px; }
+  .round { width: 50px; height: 50px; font-size: 24px; box-shadow: 0 4px 0 var(--lift); }
+  img.mini { width: 40px; height: 40px; }
+  .stars { font-size: 20px; padding: 5px 12px 5px 10px; gap: 4px; box-shadow: 0 4px 0 var(--lift); }
+  .levelpill { font-size: 18px; padding: 5px 12px; box-shadow: 0 4px 0 rgba(0, 0, 0, .2); }
+  .ask { font-size: clamp(18px, 3vw, 24px); padding: 4px 16px; line-height: 1.15; box-shadow: 0 4px 0 var(--lift); }
+  .bar-pip { width: 44px; height: 44px; }
+
+  /* who's playing */
+  .who { gap: 8px; }
+  .who .bigtitle { font-size: clamp(34px, 11dvh, 52px); }
+  .whoask { font-size: 24px; }
+  .who-pip { width: 44px; height: 44px; }
+  .player { min-width: 0; padding: 8px 18px; gap: 4px; flex-direction: row; gap: 14px; }
+  .avatar { width: clamp(70px, 24dvh, 110px); }
+  .pname { font-size: 26px; }
+  .gear-link { margin-top: 0; }
+
+  /* home */
+  .home-scroll { gap: 10px; }
+  .hello { font-size: 26px; }
+  .greet .pip { width: 44px; height: 44px; }
+  .featured { margin-top: 34px; gap: 14px; row-gap: 40px; }
+  .hero-door { min-height: 100px; border-radius: 24px; padding: 10px 18px; }
+  .featured .hd-title { font-size: 28px; }
+  .hd-sub { font-size: 14px; }
+  .hero-door img { height: 128%; max-height: 150px; right: 6px; }
+  .door-bot { height: 122%; max-height: 136px; }
+  .race-door-art { width: min(40%, 190px); bottom: 6px; }
+  .rd-letters { font-size: 22px; }
+  .act { min-height: 64px; font-size: 20px; }
+  .act .art { font-size: 34px; }
+  .home-scroll .doors { min-height: 300px; }
+  .doors.eight .door .art { font-size: clamp(40px, 13dvh, 70px); }
+
+  /* picture cards and tiles are sized by the screen height */
+  .choices { gap: 14px; }
+  .card { width: min(clamp(110px, 26vw, 200px), 32dvh); font-size: min(clamp(56px, 13vw, 110px), 18dvh); border-radius: 22px; box-shadow: 0 6px 0 rgba(43, 35, 80, .16); }
+  .odd .card { width: min(clamp(100px, 22vw, 180px), 28dvh); }
+  .num { font-size: min(clamp(64px, 15vw, 120px), 20dvh); }
+  .letter { font-size: min(clamp(110px, 26vw, 200px), 30dvh); }
+  .thing { font-size: min(clamp(54px, 12vw, 96px), 14dvh); }
+  .tray { min-height: 0; }
+  .shape { width: 70%; }
+
+  /* spell it: picture and letter slots side by side */
+  .spell-top { flex-direction: row; justify-content: center; gap: 18px; }
+  .spell-pic { font-size: min(clamp(80px, 18vw, 150px), 22dvh); }
+  .slot { width: min(clamp(52px, 12vw, 92px), 15dvh); font-size: min(clamp(36px, 8vw, 64px), 10dvh); border-radius: 14px; }
+  .tile { width: min(clamp(64px, 15vw, 110px), 17dvh); font-size: min(clamp(40px, 9vw, 72px), 11dvh); border-radius: 16px; box-shadow: 0 5px 0 #d9a21b; }
+  .tiles { gap: 10px; }
+
+  /* math and patterns */
+  .equation { min-height: 0; padding: 4px; }
+  .group { padding: 8px 12px; border-radius: 20px; }
+  .mthing { font-size: min(clamp(40px, 9vw, 72px), 10dvh); }
+  .op { font-size: min(clamp(56px, 12vw, 100px), 13dvh); }
+  .pattern { min-height: 0; padding: 8px 12px; border-radius: 24px; }
+  .pitem, .mystery { font-size: min(clamp(36px, 8vw, 70px), 12dvh); }
+
+  /* feed and puzzles */
+  .food { width: min(clamp(72px, 14vw, 104px), 19dvh); font-size: min(clamp(48px, 9vw, 72px), 12dvh); }
+  .food-tray { padding: 6px; }
+  .piece { width: min(clamp(90px, 18vw, 150px), 22dvh); }
+  .board { width: min(100%, 620px, calc((100dvh - 230px) * 4 / 3)); }
+
+  /* coloring: compact crayon box beside the picture */
+  .coloring { gap: 10px; }
+  .palette { grid-template-columns: repeat(3, 36px); gap: 6px; }
+  .swatch { width: 36px; height: 36px; }
+  .palette-col { gap: 8px; }
+  .palette-col .pill-btn { font-size: 15px; padding: 7px 12px; box-shadow: 0 4px 0 var(--lift); }
+  .palette-col .row-center { gap: 8px; }
+  .color-pick { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+
+  /* stories: picture on the left, words on the right */
+  .shelf { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .book-title, .super-book .book-title { font-size: 15px; }
+  .reader { gap: 8px; }
+  .page.illustrated { flex-direction: row; }
+  .page.illustrated .page-illo { flex: 1.35; height: 100%; width: auto; min-width: 0; }
+  .page.illustrated .page-text { flex: 1; align-self: center; align-content: center; font-size: clamp(18px, 5.4dvh, 26px); padding: 10px 16px; }
+  .page-text { font-size: clamp(20px, 7dvh, 34px); }
+  .page-hero { height: clamp(90px, 34dvh, 180px); }
+  .page-art { font-size: clamp(50px, 18dvh, 110px); }
+  .page-nav { gap: 10px; }
+  .arrow { width: 60px; height: 44px; font-size: 22px; border-radius: 16px; box-shadow: 0 4px 0 var(--lift); }
+  .the-end { font-size: clamp(50px, 20dvh, 100px); }
+
+  /* sticker book */
+  .stickerbook { gap: 6px; }
+  .scene-tabs { gap: 6px; }
+  .scene-tab.photo { font-size: 14px; padding: 3px 10px 3px 3px; }
+  .scene-tab.photo img { width: 44px; height: 28px; }
+  .scene { min-height: 0; border-radius: 20px; }
+  .trash { width: 50px; height: 50px; font-size: 26px; }
+  .tray-row { padding: 2px 4px 8px; }
+  .sticker.img { width: 66px; height: 66px; border-radius: 16px; padding: 4px; box-shadow: 0 4px 0 var(--lift); }
+  .price { font-size: 12px; }
+
+  /* super catch: a bigger hero on a short screen */
+  .catcher { height: 52%; }
+  .drop { width: clamp(52px, 15dvh, 84px); }
+  .catch-hint { bottom: 54%; }
+
+  /* space bots */
+  .planet-ball { width: min(clamp(120px, 22vw, 200px), 34dvh); }
+  .planet-need { font-size: 13px; }
+  .part-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+  .part-tab { font-size: 13px; padding: 4px; }
+  .part-tab span { font-size: 20px; }
+  .blast { padding: 8px; font-size: 22px; }
+  .reward-bot { height: 34dvh; }
+  .reward-card { padding: 12px 20px; gap: 4px; }
+  .reward-title { font-size: 30px; }
+  .target { width: min(clamp(66px, 10vw, 104px), 20dvh); }
+  .mission-bot { height: 46%; }
+
+  /* letter race */
+  .race-progress { margin-top: 6px; padding: 4px 12px; }
+  .rp-face { width: 30px; height: 30px; }
+  .race-track { margin-top: 6px; }
+  .racer { width: min(clamp(150px, 20vw, 240px), 30dvh); }
+  .sign { width: min(clamp(70px, 10vw, 112px), 16dvh); font-size: min(clamp(42px, 7vw, 72px), 10dvh); border-radius: 14px; }
+  .race-pic { top: 46px; font-size: min(clamp(50px, 9vw, 86px), 14dvh); }
+  .trophy { font-size: 30dvh; }
+
+  /* grown-up panel */
+  .sheet { padding: 16px; gap: 10px; }
+}
+@media (max-width: 600px) { .greet .pip { width: 60px; height: 60px; } }
+/* never let a balloon or race gate drifting past the edge make the page wobble sideways on a phone */
+html { overflow: hidden; }
+.screen { overflow-x: clip; }
