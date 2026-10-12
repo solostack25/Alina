@@ -12,7 +12,7 @@ The app opens on a "Who's playing?" screen. Each girl has her own name, stars, s
 - **Hero celebrations**: every right answer, her superhero swoops in with a burst of stars (Alina) or hearts (Liyana). Their faces are on the "Who's playing?" screen too.
 
 - **Story Time**: read-along books. Each word lights up as it's read, and she can tap any word to hear it. Includes "Alina's Big Day," a birthday story about her.
-- **Coloring**: pick a color, tap a part of the picture to fill it. Cake, fish, house, butterfly. Saved per girl.
+- **Coloring**: pick a color, tap a part of the picture to fill it. Five superhero pages of the girls (Super Sisters, Super Alina, Super Liyana, and close-ups of each) plus a cake, fish, house and butterfly. Includes tan and peach for skin. Saved per girl.
 - **Sticker Book**: spend stars on stickers (1 to 6 stars each), then drag them around garden, ocean and space scenes. Drag to the trash can to remove.
 
 ### Alina's Big Games (twilight theme, they level up)
@@ -62,3 +62,7 @@ lib/            voice, sound effects, confetti, helpers
 ```
 
 Deploys to Vercel with no configuration.
+
+### Superhero coloring pages
+
+`public/coloring/<page>-lines.png` is the outline she sees; `<page>-regions.png` stores every fillable area's number in its red and green channels, so a tap fills that whole area. They were generated from the hero cutouts with `scripts/make_coloring_pages.py` (OpenCV + scikit-image).
