@@ -25,6 +25,8 @@ import Stickers from "./games/Stickers";
 import Stories from "./games/Stories";
 import Coloring from "./games/Coloring";
 import SuperCatch from "./games/SuperCatch";
+import SpaceBots from "./games/SpaceBots";
+import Robot, { DEFAULT_ROBOT, type RobotConfig } from "./Robot";
 
 const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!", "Amazing!", "So smart!"];
 const DEFAULT_NAMES: Record<Player, string> = { big: "Alina", little: "Liyana" };
@@ -56,7 +58,7 @@ const ACTIVITIES: { id: Activity; label: string; art: string; cls: string }[] = 
 const GAMES: Record<GameId, (p: GameProps) => React.ReactNode> = {
   balloons: Balloons, count: Counting, letters: Letters, shapes: Shapes,
   memory: Memory, simon: Simon, spell: Spell, math: MathGame, patterns: Patterns, odd: OddOneOut, feed: Feed, puzzle: Puzzle,
-  stickers: Stickers, stories: Stories, coloring: Coloring, catch: SuperCatch,
+  stickers: Stickers, stories: Stories, coloring: Coloring, catch: SuperCatch, bots: SpaceBots,
 };
 
 /** Super Catch levels up for Alina only: colors, numbers, letter sounds. */
@@ -104,7 +106,7 @@ export default function Playtime() {
 
   const name = names[player];
   const isBig = (g: Screen): g is BigGame => BIG_DOORS.some((d) => d.id === g);
-  const showsLevel = isBig(screen) || (screen === "catch" && player === "big");
+  const showsLevel = isBig(screen) || ((screen === "catch" || screen === "bots") && player === "big");
   const levelKey = `${player}:${screen}`;
   const level = levels[levelKey] ?? 1;
 
@@ -123,7 +125,7 @@ export default function Playtime() {
     const mine = session.current;
     const live = () => session.current === mine;
     const game = screen;
-    const door = BIG_DOORS.find((d) => d.id === game) ?? (game === "catch" && player === "big" ? { max: CATCH_MAX } : undefined);
+    const door = BIG_DOORS.find((d) => d.id === game) ?? ((game === "catch" || game === "bots") && player === "big" ? { max: CATCH_MAX } : undefined);
     return {
       name,
       player,
@@ -294,6 +296,7 @@ export default function Playtime() {
               <Pip size={92} />
               <p className="hello">{player === "big" ? `${name}'s Big Games` : `Hi ${name}! Let's play!`}</p>
             </div>
+            <div className="featured">
             <button
               className={`hero-door ${player}`}
               onClick={() => {
@@ -315,6 +318,29 @@ export default function Playtime() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={HEROES[player].hero} alt="" draggable={false} />
             </button>
+            <button
+              className={`hero-door bots-door`}
+              onClick={() => {
+                sfx.pop();
+                go("bots");
+              }}
+            >
+              <span className="hero-door-text">
+                <span className="hd-title">Space Bots</span>
+                <span className="hd-sub">🚀 Build a robot! 🪐</span>
+                {player === "big" && (
+                  <span className="lvl" aria-label={`Level ${levels["big:bots"] ?? 1} of ${CATCH_MAX}`}>
+                    {Array.from({ length: CATCH_MAX }, (_, i) => (
+                      <i key={i} className={i < (levels["big:bots"] ?? 1) ? "on" : ""} />
+                    ))}
+                  </span>
+                )}
+              </span>
+              <span className="door-bot">
+                <Robot config={store.get<{ robot: RobotConfig }>(`bots:${player}`, { robot: DEFAULT_ROBOT }).robot} />
+              </span>
+            </button>
+            </div>
             <div className="acts">
               {ACTIVITIES.map((a) => (
                 <button

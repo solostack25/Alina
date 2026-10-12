@@ -7,7 +7,7 @@ export type BigGame = "memory" | "simon" | "spell" | "math" | "patterns" | "odd"
 /** Things both girls can do. */
 export type Activity = "stickers" | "stories" | "coloring";
 /** Superhero game both girls play (levels up for Alina). */
-export type HeroGame = "catch";
+export type HeroGame = "catch" | "bots";
 export type GameId = LittleGame | BigGame | Activity | HeroGame;
 
 export type GameProps = {
