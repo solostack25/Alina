@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { currentVoiceName, listVoices, say, setVoice, voiceMode } from "@/lib/voice";
+import { currentVoiceName, getAiVoice, listVoices, say, setAiVoice, setVoice, voiceMode } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { attachConfetti, confetti } from "@/lib/confetti";
 import { pick, store } from "@/lib/util";
@@ -79,6 +79,9 @@ export default function Playtime() {
   const [draft, setDraft] = useState(DEFAULT_NAMES);
   const [voices, setVoices] = useState<string[]>([]);
   const [voiceName, setVoiceName] = useState("");
+  type AiVoice = { id: string; name: string; group: "mine" | "elevenlabs"; description?: string };
+  const [aiVoices, setAiVoices] = useState<AiVoice[]>([]);
+  const [aiPick, setAiPick] = useState("");
   const fx = useRef<HTMLCanvasElement>(null);
   const session = useRef(0); // bumps on every screen change so stale timers in old games stay quiet
   const streak = useRef(0);
@@ -211,6 +214,14 @@ export default function Playtime() {
     holdTimer.current = setTimeout(() => {
       setDraft(names);
       setVoices(listVoices().map((v) => v.name));
+      fetch("/api/voices")
+        .then((r) => r.json())
+        .then((d: { voices: AiVoice[]; default?: string }) => {
+          setAiVoices(d.voices ?? []);
+          const mine = getAiVoice();
+          setAiPick((d.voices ?? []).some((v) => v.id === mine) ? mine : d.default ?? "");
+        })
+        .catch(() => setAiVoices([]));
       setVoiceName(currentVoiceName());
       setPanel(true);
     }, 900);
@@ -397,30 +408,67 @@ export default function Playtime() {
             <input id="bigName" value={draft.big} onChange={(e) => setDraft({ ...draft, big: e.target.value })} autoComplete="off" />
             <label htmlFor="littleName">Little sister (simple games)</label>
             <input id="littleName" value={draft.little} onChange={(e) => setDraft({ ...draft, little: e.target.value })} autoComplete="off" />
-            <label htmlFor="voicePick">Pip&apos;s voice</label>
-            <p className="note">{voiceMode() === "ai" ? "✅ Using the natural AI voice." : "Using this device's voice. Add a voice key in Vercel for the natural AI voice."}</p>
-            <div className="voice-row">
-              <select
-                id="voicePick"
-                value={voiceName}
-                onChange={(e) => {
-                  setVoiceName(e.target.value);
-                  setVoice(e.target.value);
-                  say(`Hi ${draft.big || "Alina"}! I'm Pip. Let's play!`);
-                }}
-              >
-                {voices.length === 0 && <option value="">Default voice</option>}
-                {voices.map((v, i) => (
-                  <option key={v} value={v}>
-                    {v}
-                    {i === 0 ? " (best match)" : ""}
-                  </option>
-                ))}
-              </select>
-              <button className="btn alt" onClick={() => say(`Hi ${draft.big || "Alina"}! I'm Pip. Let's play!`)}>
-                ▶ Test
-              </button>
-            </div>
+            {aiVoices.length > 0 ? (
+              <>
+                <label htmlFor="aiVoicePick">Pip&apos;s voice</label>
+                <div className="voice-row">
+                  <select
+                    id="aiVoicePick"
+                    value={aiPick}
+                    onChange={(e) => {
+                      setAiPick(e.target.value);
+                      setAiVoice(e.target.value);
+                      say(`Hi ${draft.big || "Alina"} and ${draft.little || "Liyana"}! I'm Pip. Let's play!`);
+                    }}
+                  >
+                    {(["mine", "elevenlabs"] as const).map((g) => {
+                      const list = aiVoices.filter((v) => v.group === g);
+                      return list.length ? (
+                        <optgroup key={g} label={g === "mine" ? "Your voices" : "ElevenLabs voices"}>
+                          {list.map((v) => (
+                            <option key={v.id} value={v.id}>
+                              {v.name}
+                              {v.description ? ` (${v.description})` : ""}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : null;
+                    })}
+                  </select>
+                  <button className="btn alt" onClick={() => say(`Hi ${draft.big || "Alina"} and ${draft.little || "Liyana"}! I'm Pip. Let's play!`)}>
+                    ▶ Test
+                  </button>
+                </div>
+                <p className="note">Add more voices to &quot;My Voices&quot; in ElevenLabs and they show up here. The choice is saved on this device.</p>
+              </>
+            ) : (
+              <>
+                <label htmlFor="voicePick">Pip&apos;s voice</label>
+                <p className="note">{voiceMode() === "ai" ? "✅ Using the natural AI voice." : "Using this device's voice. Add a voice key in Vercel for the natural AI voice."}</p>
+                <div className="voice-row">
+                  <select
+                    id="voicePick"
+                    value={voiceName}
+                    onChange={(e) => {
+                      setVoiceName(e.target.value);
+                      setVoice(e.target.value);
+                      say(`Hi ${draft.big || "Alina"}! I'm Pip. Let's play!`);
+                    }}
+                  >
+                    {voices.length === 0 && <option value="">Default voice</option>}
+                    {voices.map((v, i) => (
+                      <option key={v} value={v}>
+                        {v}
+                        {i === 0 ? " (best match)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="btn alt" onClick={() => say(`Hi ${draft.big || "Alina"}! I'm Pip. Let's play!`)}>
+                    ▶ Test
+                  </button>
+                </div>
+              </>
+            )}
             <div className="row">
               <button
                 className="btn"
@@ -448,7 +496,9 @@ export default function Playtime() {
                 Close
               </button>
             </div>
-            <p className="note">{voiceMode() === "ai" ? "The list above is only used if the AI voice can't be reached." : "Device voices:"} Voices come from this device. On an iPad, a Premium voice like Ava or Zoe sounds much more natural: Settings › Accessibility › Spoken Content › Voices › English.</p>
+            {aiVoices.length === 0 && (
+              <p className="note">Voices come from this device. On an iPad, a Premium voice like Ava or Zoe sounds much more natural: Settings › Accessibility › Spoken Content › Voices › English.</p>
+            )}
             <p className="note">Big games level up after 3 right answers in a row. Everything is saved on this device only.</p>
           </div>
         </div>

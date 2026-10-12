@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
+import { accountVoices, defaultVoiceId } from "@/lib/elevenVoices";
 
 /**
  * Pip's AI voice. GET /api/tts?t=<text>&s=<speed>
  *
  * Uses whichever key is set in the Vercel project:
- *   ELEVENLABS_API_KEY  (+ optional ELEVENLABS_VOICE_ID)   most human-sounding
+ *   ELEVENLABS_API_KEY  (+ ELEVENLABS_VOICE_ID default; any voice in the account can be picked in settings)
  *   OPENAI_API_KEY      (+ optional OPENAI_TTS_VOICE)      gpt-4o-mini-tts with acting directions
  *
  * Responses are cached by Vercel's CDN for a year, so each phrase is only ever generated once.
@@ -32,8 +33,10 @@ export async function GET(req: NextRequest) {
   try {
     let upstream: Response;
     if (eleven) {
-      // Default voice: "Sarah", a soft, young, friendly voice from ElevenLabs' premade set.
-      const voiceId = process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
+      // The voice picked in grown-up settings, if it's one of the account's voices; otherwise the default.
+      const asked = req.nextUrl.searchParams.get("v") ?? "";
+      const allowed = asked && (await accountVoices()).some((v) => v.id === asked);
+      const voiceId = allowed ? asked : defaultVoiceId();
       upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
         method: "POST",
         headers: { "xi-api-key": eleven, "content-type": "application/json", accept: "audio/mpeg" },

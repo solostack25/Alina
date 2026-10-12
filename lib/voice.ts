@@ -125,15 +125,37 @@ let current: AudioBufferSourceNode | null = null;
 let chain: Promise<void> = Promise.resolve();
 let wordTimers: ReturnType<typeof setTimeout>[] = [];
 
+// Which AI voice this device uses: picked in grown-up settings, else the project default.
+let aiVoice: string = process.env.NEXT_PUBLIC_TTS_VOICE ?? "default";
+if (typeof window !== "undefined") {
+  try {
+    aiVoice = localStorage.getItem("aiVoice") || aiVoice;
+  } catch {
+    /* storage blocked */
+  }
+}
+export function getAiVoice() {
+  return aiVoice;
+}
+export function setAiVoice(id: string) {
+  aiVoice = id;
+  try {
+    localStorage.setItem("aiVoice", id);
+  } catch {
+    /* storage blocked */
+  }
+  buffers.clear();
+}
+
 export function voiceMode(): "ai" | "device" {
   return cloud === "on" ? "ai" : "device";
 }
 
 function getBuffer(ctx: AudioContext, text: string, speed: number) {
-  const k = `${speed}|${text}`;
+  const k = `${aiVoice}|${speed}|${text}`;
   let p = buffers.get(k);
   if (!p) {
-    p = fetch(`/api/tts?t=${encodeURIComponent(text)}&s=${speed}&v=${encodeURIComponent(process.env.NEXT_PUBLIC_TTS_VOICE ?? "default")}`).then(async (res) => {
+    p = fetch(`/api/tts?t=${encodeURIComponent(text)}&s=${speed}&v=${encodeURIComponent(aiVoice)}`).then(async (res) => {
       if (res.status === 503) cloud = "off";
       if (!res.ok) throw new Error(`tts ${res.status}`);
       cloud = "on";
