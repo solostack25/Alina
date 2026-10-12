@@ -180,7 +180,7 @@ export default function Stories({ ask, win, name }: GameProps) {
       {p.img ? (
         <div className="page illustrated" key={page}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="page-illo" src={p.img} alt="" draggable={false} />
+          <img className="page-illo" src={p.img} alt="" draggable={false} style={p.focus ? { objectPosition: p.focus } : undefined} />
           <p className="page-text">
           {words.map((w, i) => (
             <button key={i} className={`word${i === hi ? " hi" : ""}`} onClick={() => tapWord(i)}>
