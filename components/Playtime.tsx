@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { say } from "@/lib/voice";
+import { currentVoiceName, listVoices, say, setVoice } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { attachConfetti, confetti } from "@/lib/confetti";
 import { pick, store } from "@/lib/util";
@@ -71,6 +71,8 @@ export default function Playtime() {
   const [cheer, setCheer] = useState<{ id: number; text: string; big?: boolean } | null>(null);
   const [panel, setPanel] = useState(false);
   const [draft, setDraft] = useState(DEFAULT_NAMES);
+  const [voices, setVoices] = useState<string[]>([]);
+  const [voiceName, setVoiceName] = useState("");
   const fx = useRef<HTMLCanvasElement>(null);
   const session = useRef(0); // bumps on every screen change so stale timers in old games stay quiet
   const streak = useRef(0);
@@ -201,6 +203,8 @@ export default function Playtime() {
   const startHold = () => {
     holdTimer.current = setTimeout(() => {
       setDraft(names);
+      setVoices(listVoices().map((v) => v.name));
+      setVoiceName(currentVoiceName());
       setPanel(true);
     }, 900);
   };
@@ -359,6 +363,29 @@ export default function Playtime() {
             <input id="bigName" value={draft.big} onChange={(e) => setDraft({ ...draft, big: e.target.value })} autoComplete="off" />
             <label htmlFor="littleName">Little sister (simple games)</label>
             <input id="littleName" value={draft.little} onChange={(e) => setDraft({ ...draft, little: e.target.value })} autoComplete="off" />
+            <label htmlFor="voicePick">Pip&apos;s voice</label>
+            <div className="voice-row">
+              <select
+                id="voicePick"
+                value={voiceName}
+                onChange={(e) => {
+                  setVoiceName(e.target.value);
+                  setVoice(e.target.value);
+                  say(`Hi ${draft.big || "Alina"}! I'm Pip. Let's play!`);
+                }}
+              >
+                {voices.length === 0 && <option value="">Default voice</option>}
+                {voices.map((v, i) => (
+                  <option key={v} value={v}>
+                    {v}
+                    {i === 0 ? " (best match)" : ""}
+                  </option>
+                ))}
+              </select>
+              <button className="btn alt" onClick={() => say(`Hi ${draft.big || "Alina"}! I'm Pip. Let's play!`)}>
+                ▶ Test
+              </button>
+            </div>
             <div className="row">
               <button
                 className="btn"
@@ -386,6 +413,7 @@ export default function Playtime() {
                 Close
               </button>
             </div>
+            <p className="note">Voices come from this device. On an iPad, a Premium voice like Ava or Zoe sounds much more natural: Settings › Accessibility › Spoken Content › Voices › English.</p>
             <p className="note">Big games level up after 3 right answers in a row. Everything is saved on this device only.</p>
           </div>
         </div>
