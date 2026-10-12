@@ -179,8 +179,10 @@ export default function Stories({ ask, win, name }: GameProps) {
     <div className="stage reader">
       {p.img ? (
         <div className="page illustrated" key={page}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="page-illo" src={p.img} alt="" draggable={false} style={p.focus ? { objectPosition: p.focus } : undefined} />
+          <div className="illo-wrap" style={{ ["--illo" as string]: `url(${p.img})` }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="page-illo" src={p.img} alt="" draggable={false} />
+          </div>
           <p className="page-text">
           {words.map((w, i) => (
             <button key={i} className={`word${i === hi ? " hi" : ""}`} onClick={() => tapWord(i)}>
