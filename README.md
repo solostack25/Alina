@@ -15,7 +15,7 @@ The app opens on a "Who's playing?" screen. Each girl has her own name, stars, s
 
 - **Story Time**: read-along books. Each word lights up as it's read, and she can tap any word to hear it. The "Super Alina & Super Liyana" series (the family's own stories, with the girls' superhero art on the pages): *Super Alina and the Missing Stars*, *Super Liyana and the Bubble Trouble*, *Super Alina and the Grumpy Cloud*, and *Super Alina's Biggest Birthday Wish*, each ending with "Little heroes, BIG hearts, SUPER powers!" Plus "Alina's Big Day."
 - **Coloring**: pick a color, tap a space to fill it. Ten superhero pages of the girls from the family's coloring sheet (Super Sisters, Alina the Brave, Liyana the Kind Heart, Happy Birthday Alina, and more), plus a cake, fish, house and butterfly. Tan and peach are in the crayons. Saved per girl.
-- **Sticker Book**: spend stars on stickers (1 to 6 stars each), then drag them around garden, ocean and space scenes. Drag to the trash can to remove.
+- **Sticker Book**: four scenes from the superhero stories (Starry Night, Bubble Plaza, Rainbow Park, Birthday Party), each with its own matching stickers, plus the girls' superhero stickers in every scene. Spend stars (1 to 5) to unlock stickers; one per scene is free. Drag to move, drag to the trash can to remove. Art is in `public/scenes` and `public/stickers`.
 
 ### Alina's Big Games (twilight theme, they level up)
 
