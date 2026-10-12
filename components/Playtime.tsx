@@ -424,7 +424,7 @@ export default function Playtime() {
                     {(["mine", "elevenlabs"] as const).map((g) => {
                       const list = aiVoices.filter((v) => v.group === g);
                       return list.length ? (
-                        <optgroup key={g} label={g === "mine" ? "Your voices" : "ElevenLabs voices"}>
+                        <optgroup key={g} label={g === "mine" ? "Alina App voices" : "ElevenLabs voices"}>
                           {list.map((v) => (
                             <option key={v.id} value={v.id}>
                               {v.name}
@@ -439,7 +439,7 @@ export default function Playtime() {
                     ▶ Test
                   </button>
                 </div>
-                <p className="note">Add more voices to &quot;My Voices&quot; in ElevenLabs and they show up here. The choice is saved on this device.</p>
+                <p className="note">Add or remove voices in your &quot;Alina App&quot; collection in ElevenLabs to change this list. The choice is saved on this device.</p>
               </>
             ) : (
               <>
