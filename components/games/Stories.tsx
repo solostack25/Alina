@@ -62,6 +62,7 @@ export default function Stories({ ask, win, name }: GameProps) {
         if (token.current !== me) return;
         gotBoundary = true;
         clearTimeout(startFallback);
+        clearInterval(fallback.current);
         let idx = 0;
         for (let i = 0; i < ws.length; i++) if (ws[i].start <= ci) idx = i;
         setHi(idx);

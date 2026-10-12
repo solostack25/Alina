@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { currentVoiceName, listVoices, say, setVoice } from "@/lib/voice";
+import { currentVoiceName, listVoices, say, setVoice, voiceMode } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { attachConfetti, confetti } from "@/lib/confetti";
 import { pick, store } from "@/lib/util";
@@ -398,6 +398,7 @@ export default function Playtime() {
             <label htmlFor="littleName">Little sister (simple games)</label>
             <input id="littleName" value={draft.little} onChange={(e) => setDraft({ ...draft, little: e.target.value })} autoComplete="off" />
             <label htmlFor="voicePick">Pip&apos;s voice</label>
+            <p className="note">{voiceMode() === "ai" ? "✅ Using the natural AI voice." : "Using this device's voice. Add a voice key in Vercel for the natural AI voice."}</p>
             <div className="voice-row">
               <select
                 id="voicePick"
@@ -447,7 +448,7 @@ export default function Playtime() {
                 Close
               </button>
             </div>
-            <p className="note">Voices come from this device. On an iPad, a Premium voice like Ava or Zoe sounds much more natural: Settings › Accessibility › Spoken Content › Voices › English.</p>
+            <p className="note">{voiceMode() === "ai" ? "The list above is only used if the AI voice can't be reached." : "Device voices:"} Voices come from this device. On an iPad, a Premium voice like Ava or Zoe sounds much more natural: Settings › Accessibility › Spoken Content › Voices › English.</p>
             <p className="note">Big games level up after 3 right answers in a row. Everything is saved on this device only.</p>
           </div>
         </div>

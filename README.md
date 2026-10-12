@@ -43,6 +43,10 @@ Every instruction is spoken, the 🔊 bubble repeats it, and right answers get c
 
 - On the "Who's playing?" screen, press and hold the ⚙️ button for about a second to set both names or reset stars and levels.
 - Turn the volume up; the app talks.
+- **Natural AI voice:** add one of these in Vercel → Project → Settings → Environment Variables, then redeploy:
+  - `OPENAI_API_KEY` (uses `gpt-4o-mini-tts`, voice `coral`; change with `OPENAI_TTS_VOICE`), or
+  - `ELEVENLABS_API_KEY` (optional `ELEVENLABS_VOICE_ID`).
+  Each phrase is generated once and cached by Vercel's CDN. Without a key, the app uses the device's built-in voice.
 - On a tablet, use **Add to Home Screen** so it opens full-screen like an app.
 - Names, stars and levels are saved on that device only (localStorage). No accounts, no backend.
 

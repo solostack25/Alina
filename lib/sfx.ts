@@ -2,11 +2,22 @@
 
 let ac: AudioContext | null = null;
 
-function tone(freq: number, dur = 0.15, type: OscillatorType = "sine", when = 0, vol = 0.25) {
+/** One shared audio context for sound effects and Pip's AI voice (iPad unlocks it on the first tap). */
+export function audioContext(): AudioContext | null {
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     ac = ac || new Ctx();
     if (ac.state === "suspended") void ac.resume();
+    return ac;
+  } catch {
+    return null;
+  }
+}
+
+function tone(freq: number, dur = 0.15, type: OscillatorType = "sine", when = 0, vol = 0.25) {
+  try {
+    ac = audioContext();
+    if (!ac) return;
     const o = ac.createOscillator();
     const g = ac.createGain();
     const t = ac.currentTime + when;

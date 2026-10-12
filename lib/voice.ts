@@ -1,4 +1,6 @@
 // Spoken instructions. Everything in the app is said out loud because Alina is still learning to read.
+// Uses the AI voice (app/api/tts) when a voice key is set in Vercel, otherwise the device voice.
+import { audioContext } from "./sfx";
 
 let voice: SpeechSynthesisVoice | null = null;
 let chosenName: string | null = null;
@@ -89,14 +91,9 @@ export type SayOptions = {
   onEnd?: () => void;
 };
 
-export function say(text: string, opts: SayOptions = {}) {
+/** The iPad / browser built-in voice. Used when the AI voice isn't set up or can't be reached. */
+function deviceSay(text: string, opts: SayOptions, mine: number) {
   try {
-    if (!opts.queue) {
-      speechSynthesis.cancel();
-      pending = 0;
-      gen++;
-    }
-    const mine = gen;
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
     // Natural pitch: raising it makes computer voices sound chipmunky and uncanny.
@@ -120,13 +117,121 @@ export function say(text: string, opts: SayOptions = {}) {
   }
 }
 
+// ---------- AI voice (see app/api/tts) ----------
+// "unknown" until the first try; "off" when the server says no voice key is configured.
+let cloud: "unknown" | "on" | "off" = "unknown";
+const buffers = new Map<string, Promise<AudioBuffer>>();
+let current: AudioBufferSourceNode | null = null;
+let chain: Promise<void> = Promise.resolve();
+let wordTimers: ReturnType<typeof setTimeout>[] = [];
+
+export function voiceMode(): "ai" | "device" {
+  return cloud === "on" ? "ai" : "device";
+}
+
+function getBuffer(ctx: AudioContext, text: string, speed: number) {
+  const k = `${speed}|${text}`;
+  let p = buffers.get(k);
+  if (!p) {
+    p = fetch(`/api/tts?t=${encodeURIComponent(text)}&s=${speed}`).then(async (res) => {
+      if (res.status === 503) cloud = "off";
+      if (!res.ok) throw new Error(`tts ${res.status}`);
+      cloud = "on";
+      return ctx.decodeAudioData(await res.arrayBuffer());
+    });
+    p.catch(() => buffers.delete(k));
+    buffers.set(k, p);
+    if (buffers.size > 300) buffers.delete(buffers.keys().next().value!);
+  }
+  return p;
+}
+
+function stopCloud() {
+  wordTimers.forEach(clearTimeout);
+  wordTimers = [];
+  try {
+    current?.stop();
+  } catch {
+    /* already stopped */
+  }
+  current = null;
+}
+
+function playBuffer(ctx: AudioContext, buf: AudioBuffer, text: string, opts: SayOptions, mine: number) {
+  return new Promise<void>((resolve) => {
+    if (mine !== gen) return resolve();
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    current = src;
+    setSpeaking(true);
+    // Word timing for read-along highlighting: spread the words across the clip by length.
+    if (opts.onWord) {
+      const words = [...text.matchAll(/\S+/g)].map((m) => ({ i: m.index ?? 0, n: m[0].length + 1 }));
+      const total = words.reduce((t, w) => t + w.n, 0) || 1;
+      const span = buf.duration * 0.9;
+      let at = buf.duration * 0.04;
+      for (const w of words) {
+        const ci = w.i;
+        wordTimers.push(setTimeout(() => mine === gen && opts.onWord!(ci), at * 1000));
+        at += (w.n / total) * span;
+      }
+    }
+    src.onended = () => {
+      if (current === src) current = null;
+      if (mine === gen && !current) setSpeaking(false);
+      opts.onEnd?.();
+      resolve();
+    };
+    src.start();
+  });
+}
+
+export function say(text: string, opts: SayOptions = {}) {
+  if (!opts.queue) {
+    try {
+      speechSynthesis.cancel();
+    } catch {
+      /* no device speech */
+    }
+    stopCloud();
+    pending = 0;
+    gen++;
+    chain = Promise.resolve();
+  }
+  const mine = gen;
+  const ctx = cloud !== "off" ? audioContext() : null;
+  if (!ctx) return deviceSay(text, opts, mine);
+
+  const speed = Math.round(Math.min(1.2, Math.max(0.7, (opts.rate ?? 0.95) / 0.95)) * 100) / 100;
+  const buf = getBuffer(ctx, text, speed);
+  const run = () =>
+    buf.then(
+      (b) => playBuffer(ctx, b, text, opts, mine),
+      () => {
+        // AI voice unavailable: use the device voice for this line.
+        if (mine === gen) deviceSay(text, opts, mine);
+      },
+    );
+  chain = opts.queue ? chain.then(run) : run();
+}
+
+/** Fetch lines ahead of time so they play instantly later. */
+export function prefetch(lines: string[]) {
+  const ctx = cloud !== "off" ? audioContext() : null;
+  if (!ctx) return;
+  for (const t of lines) void getBuffer(ctx, t, 1).catch(() => {});
+}
+
 export function hush() {
   try {
     speechSynthesis.cancel();
-    pending = 0;
-    gen++;
-    setSpeaking(false);
   } catch {
     /* ignore */
   }
+  stopCloud();
+  pending = 0;
+  gen++;
+  chain = Promise.resolve();
+  setSpeaking(false);
 }
