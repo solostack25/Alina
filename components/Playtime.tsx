@@ -1,127 +1,222 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { attachConfetti, confetti } from "@/lib/confetti";
 import { pick, store } from "@/lib/util";
-import type { GameId, GameProps } from "./types";
+import type { BigGame, GameId, GameProps, LittleGame, Player } from "./types";
 import Balloons from "./games/Balloons";
 import Counting from "./games/Counting";
 import Letters from "./games/Letters";
 import Shapes from "./games/Shapes";
+import Memory from "./games/Memory";
+import Simon from "./games/Simon";
+import Spell from "./games/Spell";
+import MathGame from "./games/MathGame";
+import Patterns from "./games/Patterns";
+import OddOneOut from "./games/OddOneOut";
 
-const DEFAULT_NAME = "Alina";
-const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!"];
+const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!", "Amazing!", "So smart!"];
+const DEFAULT_NAMES: Record<Player, string> = { big: "Alina", little: "Sister" };
 
-const DOORS: { id: GameId; label: string; art: string; cls: string }[] = [
+const LITTLE_DOORS: { id: LittleGame; label: string; art: string; cls: string }[] = [
   { id: "balloons", label: "Balloons", art: "🎈", cls: "d1" },
   { id: "count", label: "Counting", art: "🍓", cls: "d2" },
   { id: "letters", label: "Letters", art: "🔤", cls: "d3" },
   { id: "shapes", label: "Shapes", art: "🔷", cls: "d4" },
 ];
 
-const GAMES = { balloons: Balloons, count: Counting, letters: Letters, shapes: Shapes };
+const BIG_DOORS: { id: BigGame; label: string; art: string; cls: string; max: number; spoken: string }[] = [
+  { id: "memory", label: "Memory", art: "🃏", cls: "b1", max: 4, spoken: "Memory match" },
+  { id: "simon", label: "Copy Me", art: "🎵", cls: "b2", max: 8, spoken: "Copy me" },
+  { id: "spell", label: "Spell It", art: "✏️", cls: "b3", max: 3, spoken: "Spell it" },
+  { id: "math", label: "Math", art: "➕", cls: "b4", max: 4, spoken: "Math" },
+  { id: "patterns", label: "Patterns", art: "🔁", cls: "b5", max: 4, spoken: "Patterns" },
+  { id: "odd", label: "Odd One Out", art: "🧐", cls: "b6", max: 3, spoken: "Odd one out" },
+];
 
-type Screen = "start" | "home" | GameId;
+const GAMES: Record<GameId, (p: GameProps) => React.ReactNode> = {
+  balloons: Balloons, count: Counting, letters: Letters, shapes: Shapes,
+  memory: Memory, simon: Simon, spell: Spell, math: MathGame, patterns: Patterns, odd: OddOneOut,
+};
+
+/** Wins in a row needed to level up. */
+const STREAK_TO_LEVEL = 3;
+
+type Screen = "who" | "home" | GameId;
 
 export default function Playtime() {
-  const [screen, setScreen] = useState<Screen>("start");
-  const [stars, setStars] = useState(0);
-  const [name, setName] = useState(DEFAULT_NAME);
+  const [screen, setScreen] = useState<Screen>("who");
+  const [player, setPlayer] = useState<Player>("big");
+  const [names, setNames] = useState(DEFAULT_NAMES);
+  const [stars, setStars] = useState<Record<Player, number>>({ big: 0, little: 0 });
+  const [levels, setLevels] = useState<Record<string, number>>({});
   const [prompt, setPrompt] = useState<{ text: string; spoken: string; color?: { bg: string; fg: string } }>({ text: "", spoken: "" });
-  const [cheer, setCheer] = useState<{ id: number; text: string } | null>(null);
+  const [cheer, setCheer] = useState<{ id: number; text: string; big?: boolean } | null>(null);
   const [panel, setPanel] = useState(false);
-  const [draftName, setDraftName] = useState("");
+  const [draft, setDraft] = useState(DEFAULT_NAMES);
   const fx = useRef<HTMLCanvasElement>(null);
   const session = useRef(0); // bumps on every screen change so stale timers in old games stay quiet
+  const streak = useRef(0);
   const holdTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const unlocked = useRef(false);
+  const birthdaySaid = useRef<Record<Player, boolean>>({ big: false, little: false });
 
   useEffect(() => {
-    setStars(store.get("stars", 0));
-    setName(store.get("kid", DEFAULT_NAME));
+    setNames(store.get("names", DEFAULT_NAMES));
+    setStars(store.get("stars2", { big: 0, little: 0 }));
+    setLevels(store.get("levels", {}));
     return fx.current ? attachConfetti(fx.current) : undefined;
   }, []);
 
+  useEffect(() => {
+    document.documentElement.dataset.player = screen === "who" ? "" : player;
+  }, [player, screen]);
+
+  const name = names[player];
+  const isBig = (g: Screen): g is BigGame => BIG_DOORS.some((d) => d.id === g);
+  const levelKey = `${player}:${screen}`;
+  const level = levels[levelKey] ?? 1;
+
   const go = (s: Screen) => {
     session.current++;
+    streak.current = 0;
     setScreen(s);
   };
 
   const goHome = (greeting?: string) => {
     go("home");
-    say(greeting ?? (name ? `Hi ${name}! What do you want to play?` : "What do you want to play?"));
+    say(greeting ?? (name ? `${name}, what do you want to play?` : "What do you want to play?"));
   };
 
   const gameProps = useMemo<GameProps>(() => {
     const mine = session.current;
     const live = () => session.current === mine;
+    const game = screen;
+    const door = BIG_DOORS.find((d) => d.id === game);
     return {
       name,
-      stars,
+      stars: stars[player],
+      level,
       ask: (text, spoken, color) => {
         if (!live()) return;
         setPrompt({ text, spoken: spoken ?? text, color });
         say(spoken ?? text);
       },
+      miss: () => {
+        streak.current = 0;
+      },
       win: (spoken) => {
         if (!live()) return;
         const p = pick(PRAISE);
-        setCheer({ id: Date.now(), text: p });
         sfx.yay();
         confetti();
         setStars((s) => {
-          store.set("stars", s + 1);
-          return s + 1;
+          const next = { ...s, [player]: s[player] + 1 };
+          store.set("stars2", next);
+          return next;
         });
-        say(`${spoken ? spoken + ". " : ""}${p}${name && Math.random() < 0.4 ? ` ${name}!` : ""}`);
+        streak.current++;
+        let levelLine = "";
+        if (door && streak.current >= STREAK_TO_LEVEL) {
+          streak.current = 0;
+          const key = `${player}:${game}`;
+          setLevels((lv) => {
+            const cur = lv[key] ?? 1;
+            if (cur >= door.max) return lv;
+            const next = { ...lv, [key]: cur + 1 };
+            store.set("levels", next);
+            return next;
+          });
+          const cur = levels[key] ?? 1;
+          if (cur < door.max) {
+            levelLine = ` Level up! Level ${cur + 1}!`;
+            setTimeout(() => {
+              sfx.levelUp();
+              confetti(160);
+              setCheer({ id: Date.now() + 1, text: `Level ${cur + 1}!`, big: true });
+            }, 1300);
+          }
+        }
+        setCheer({ id: Date.now(), text: p });
+        say(`${spoken ? spoken + ". " : ""}${p}${name && Math.random() < 0.4 ? ` ${name}!` : ""}${levelLine}`);
       },
     };
-    // Rebuilt per screen; stars read at round start is fine.
+    // Rebuilt per screen and when the level changes; games read props at the start of each round.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, name]);
+  }, [screen, name, level, player]);
 
   useEffect(() => {
     if (!cheer) return;
-    const t = setTimeout(() => setCheer(null), 1250);
+    const t = setTimeout(() => setCheer(null), cheer.big ? 1700 : 1250);
     return () => clearTimeout(t);
   }, [cheer]);
 
-  const startHold = useCallback(() => {
+  const choosePlayer = (p: Player) => {
+    if (!unlocked.current) {
+      sfx.unlock();
+      unlocked.current = true;
+    }
+    sfx.pop();
+    setPlayer(p);
+    const n = names[p];
+    session.current++;
+    setScreen("home");
+    const bday = p === "big" && !birthdaySaid.current.big;
+    birthdaySaid.current[p] = true;
+    say(
+      p === "big"
+        ? `Hi ${n || "big girl"}!${bday ? " Happy birthday!" : ""} These are your big girl games. Pick one!`
+        : `Hi ${n || "little one"}! What do you want to play?`,
+    );
+  };
+
+  const startHold = () => {
     holdTimer.current = setTimeout(() => {
-      setDraftName(name);
+      setDraft(names);
       setPanel(true);
     }, 900);
-  }, [name]);
+  };
   const endHold = () => clearTimeout(holdTimer.current);
 
-  const Game = screen !== "start" && screen !== "home" ? GAMES[screen] : null;
+  const Game = screen !== "who" && screen !== "home" ? GAMES[screen] : null;
+  const doors = player === "big" ? BIG_DOORS : LITTLE_DOORS;
 
   return (
     <>
-      <div className="cloud c1" aria-hidden />
-      <div className="cloud c2" aria-hidden />
+      <div className="sky" aria-hidden>
+        <div className="cloud c1" />
+        <div className="cloud c2" />
+      </div>
 
-      {screen === "start" && (
-        <section className="screen start">
+      {screen === "who" && (
+        <section className="screen who">
           <h1 className="bigtitle">
-            <span>{name || "Little"}&apos;s</span>
-            <br />
-            <span className="berry">Play</span> <span>Time</span>
+            <span>Play</span> <span className="berry">Time</span>
           </h1>
+          <p className="whoask">Who&apos;s playing?</p>
+          <div className="players">
+            {(["big", "little"] as Player[]).map((p) => (
+              <button key={p} className={`player ${p}`} onClick={() => choosePlayer(p)} aria-label={`${names[p]} is playing`}>
+                <span className="avatar">{(names[p] || "?")[0].toUpperCase()}</span>
+                <span className="pname">{names[p]}</span>
+                <span className="pstars">⭐ {stars[p]}</span>
+              </button>
+            ))}
+          </div>
           <button
-            className="play"
-            aria-label="Start playing"
-            onClick={() => {
-              sfx.unlock();
-              goHome(name ? `Hi ${name}! Happy birthday! What do you want to play?` : "Hi! What do you want to play?");
-            }}
+            className="gear-link"
+            aria-label="Grown-up settings (press and hold)"
+            onPointerDown={startHold}
+            onPointerUp={endHold}
+            onPointerLeave={endHold}
+            onPointerCancel={endHold}
+            onClick={() => !panel && say("Ask a grown-up!")}
+            onContextMenu={(e) => e.preventDefault()}
           >
-            <svg viewBox="0 0 10 12" aria-hidden>
-              <path d="M0 0 L10 6 L0 12 Z" fill="#fff" />
-            </svg>
+            ⚙️ Grown-ups: press and hold
           </button>
-          <p className="hint">Tap to play</p>
         </section>
       )}
 
@@ -129,34 +224,44 @@ export default function Playtime() {
         <section className="screen">
           <div className="bar">
             <button
-              className="round"
-              aria-label="Grown-up settings (press and hold)"
-              onPointerDown={startHold}
-              onPointerUp={endHold}
-              onPointerLeave={endHold}
-              onPointerCancel={endHold}
-              onClick={() => !panel && say("Ask a grown-up!")}
-              onContextMenu={(e) => e.preventDefault()}
+              className="round who-btn"
+              aria-label="Change who's playing"
+              onClick={() => {
+                sfx.boop();
+                go("who");
+                say("Who's playing?");
+              }}
             >
-              ⚙️
+              <span className={`mini ${player}`}>{(name || "?")[0].toUpperCase()}</span>
             </button>
-            <Stars n={stars} />
+            <Stars n={stars[player]} />
           </div>
-          <p className="hello">{name ? `Hi ${name}! Let's play!` : "Let's play!"}</p>
-          <div className="doors">
-            {DOORS.map((d) => (
-              <button
-                key={d.id}
-                className={`door ${d.cls}`}
-                onClick={() => {
-                  sfx.pop();
-                  go(d.id);
-                }}
-              >
-                <span className="art">{d.art}</span>
-                {d.label}
-              </button>
-            ))}
+          <p className="hello">{player === "big" ? `${name}'s Big Games` : `Hi ${name}! Let's play!`}</p>
+          <div className={`doors ${player === "big" ? "six" : ""}`}>
+            {doors.map((d) => {
+              const lv = levels[`${player}:${d.id}`] ?? 1;
+              const max = "max" in d ? d.max : 0;
+              return (
+                <button
+                  key={d.id}
+                  className={`door ${d.cls}`}
+                  onClick={() => {
+                    sfx.pop();
+                    go(d.id);
+                  }}
+                >
+                  <span className="art">{d.art}</span>
+                  {d.label}
+                  {max > 0 && (
+                    <span className="lvl" aria-label={`Level ${lv} of ${max}`}>
+                      {Array.from({ length: max }, (_, i) => (
+                        <i key={i} className={i < lv ? "on" : ""} />
+                      ))}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
@@ -184,14 +289,14 @@ export default function Playtime() {
                 🔊 {prompt.text}
               </button>
             </div>
-            <Stars n={stars} />
+            {isBig(screen) ? <div className="levelpill">Lv {level}</div> : <Stars n={stars[player]} />}
           </div>
           <Game key={session.current} {...gameProps} />
         </section>
       )}
 
       {cheer && (
-        <div key={cheer.id} className="cheer" aria-live="polite">
+        <div key={cheer.id} className={`cheer${cheer.big ? " big" : ""}`} aria-live="polite">
           {cheer.text}
         </div>
       )}
@@ -202,17 +307,18 @@ export default function Playtime() {
         <div className="panel">
           <div className="sheet" role="dialog" aria-labelledby="pt">
             <h2 id="pt">For grown-ups</h2>
-            <label htmlFor="kidName">Her name (the app will say it)</label>
-            <input id="kidName" value={draftName} onChange={(e) => setDraftName(e.target.value)} autoComplete="off" />
+            <label htmlFor="bigName">Big sister (harder games)</label>
+            <input id="bigName" value={draft.big} onChange={(e) => setDraft({ ...draft, big: e.target.value })} autoComplete="off" />
+            <label htmlFor="littleName">Little sister (simple games)</label>
+            <input id="littleName" value={draft.little} onChange={(e) => setDraft({ ...draft, little: e.target.value })} autoComplete="off" />
             <div className="row">
               <button
                 className="btn"
                 onClick={() => {
-                  const n = draftName.trim();
-                  setName(n);
-                  store.set("kid", n);
+                  const next = { big: draft.big.trim(), little: draft.little.trim() };
+                  setNames(next);
+                  store.set("names", next);
                   setPanel(false);
-                  say(n ? `Hi ${n}!` : "Saved");
                 }}
               >
                 Save
@@ -220,17 +326,19 @@ export default function Playtime() {
               <button
                 className="btn alt"
                 onClick={() => {
-                  setStars(0);
-                  store.set("stars", 0);
+                  setStars({ big: 0, little: 0 });
+                  setLevels({});
+                  store.set("stars2", { big: 0, little: 0 });
+                  store.set("levels", {});
                 }}
               >
-                Reset stars
+                Reset stars and levels
               </button>
               <button className="btn alt" onClick={() => setPanel(false)}>
                 Close
               </button>
             </div>
-            <p className="note">The app talks out loud, so turn the volume up. Saved on this device only.</p>
+            <p className="note">Big games level up after 3 right answers in a row. Everything is saved on this device only.</p>
           </div>
         </div>
       )}

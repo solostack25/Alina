@@ -34,4 +34,7 @@ export const sfx = {
     tone(180, 0.2, "sine", 0.12, 0.2);
   },
   tick: (n: number) => tone(400 + n * 60, 0.12, "triangle"),
+  note: (freq: number, dur = 0.35) => tone(freq, dur, "triangle", 0, 0.3),
+  flip: () => tone(900, 0.05, "sine", 0, 0.12),
+  levelUp: () => [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.18, "square", i * 0.07, 0.12)),
 };

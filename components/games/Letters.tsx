@@ -4,36 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { shuffle, wobble } from "@/lib/util";
+import { LETTERS as ALL } from "@/lib/letters";
 import type { GameProps } from "../types";
 
-// Letter -> [sound she hears, [picture, word]]
-const LETTERS: Record<string, [string, [string, string]]> = {
-  A: ["ah", ["🍎", "apple"]],
-  B: ["buh", ["⚽", "ball"]],
-  C: ["kuh", ["🐱", "cat"]],
-  D: ["duh", ["🐶", "dog"]],
-  E: ["eh", ["🥚", "egg"]],
-  F: ["fff", ["🐟", "fish"]],
-  G: ["guh", ["🍇", "grapes"]],
-  H: ["hhh", ["🎩", "hat"]],
-  I: ["ih", ["🦎", "iguana"]],
-  J: ["juh", ["🧃", "juice"]],
-  K: ["kuh", ["🪁", "kite"]],
-  L: ["lll", ["🦁", "lion"]],
-  M: ["mmm", ["🌙", "moon"]],
-  N: ["nnn", ["👃", "nose"]],
-  O: ["ah", ["🐙", "octopus"]],
-  P: ["puh", ["🐷", "pig"]],
-  Q: ["kwuh", ["👸", "queen"]],
-  R: ["rrr", ["🌈", "rainbow"]],
-  S: ["sss", ["☀️", "sun"]],
-  T: ["tuh", ["🐯", "tiger"]],
-  U: ["uh", ["☂️", "umbrella"]],
-  V: ["vvv", ["🎻", "violin"]],
-  W: ["wuh", ["🍉", "watermelon"]],
-  Y: ["yuh", ["🪀", "yo-yo"]],
-  Z: ["zzz", ["🦓", "zebra"]],
-};
+
+// X starts with a different sound than its name (box), so it is left out of this game.
+const LETTERS = Object.fromEntries(Object.entries(ALL).filter(([k]) => k !== "X"));
 
 type Choice = { emoji: string; word: string; ok: boolean };
 type Round = { letter: string; sound: string; word: string; choices: Choice[] };

@@ -2,21 +2,38 @@
 
 Learning games for a four-year-old who is just starting to read. Every instruction is spoken out loud, so no reading is needed.
 
-## Games
+## Who's playing?
 
-- **Balloons**: "Pop the blue balloon!" Teaches colors.
-- **Counting**: tap each thing to count out loud, then pick the number. Numbers show dots too, so she can match by counting. Goes up to 10 as she earns stars.
-- **Letters**: "B says buh. Which one starts with buh?" Beginning sounds for pre-reading. The first letter of her name shows up extra often.
-- **Shapes**: "Find the triangle!" Diamond, rectangle and oval unlock after 20 stars.
+The app opens on a "Who's playing?" screen. Each girl has her own name, stars and levels.
 
-Each right answer earns a star, confetti and a cheer. The 🔊 bubble repeats the question.
+### Alina's Big Games (twilight theme, they level up)
+
+Three right answers in a row moves a game up a level. Dots on each game door show the level.
+
+| Game | What she does | How it gets harder |
+|---|---|---|
+| **Memory** | Flip cards to find matching pairs | 6, 8, 12, then 16 cards |
+| **Copy Me** | Watch the colors light up, then copy them | Sequence gets longer and faster every round |
+| **Spell It** | Tap letter tiles to spell the picture | 3-letter words with hints, then 4 letters, then 5, with extra decoy tiles |
+| **Math** | Count the groups and pick the answer | Add to 5, add to 10, take away (birds fly off), then mixed |
+| **Patterns** | "What comes next?" | AB, then AAB/ABC, then ABB/AABB, then ABCD |
+| **Odd One Out** | "Which one doesn't belong?" | 4 items, then 5, then look-alikes (fruit vs. treats, pets vs. sea animals) |
+
+### Little sister's games (simple, no levels)
+
+- **Balloons**: "Pop the blue balloon!" Colors.
+- **Counting**: tap to count out loud, then pick the number.
+- **Letters**: "B says buh. Which one starts with buh?"
+- **Shapes**: "Find the triangle!"
+
+Every instruction is spoken, the 🔊 bubble repeats it, and right answers get confetti and a star.
 
 ## For grown-ups
 
-- Press and hold the ⚙️ button on the home screen for about a second to change her name or reset stars. A quick tap just says "Ask a grown-up."
+- On the "Who's playing?" screen, press and hold the ⚙️ button for about a second to set both names or reset stars and levels.
 - Turn the volume up; the app talks.
-- On an iPad or Android tablet, open the site and use **Add to Home Screen** so it opens full-screen like an app.
-- Name and stars are saved on that device only (localStorage). No accounts, no backend.
+- On a tablet, use **Add to Home Screen** so it opens full-screen like an app.
+- Names, stars and levels are saved on that device only (localStorage). No accounts, no backend.
 
 ## Development
 

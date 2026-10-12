@@ -1,0 +1,31 @@
+// Letter -> [sound she hears, [picture, word]]
+export const LETTERS: Record<string, [string, [string, string]]> = {
+  A: ["ah", ["🍎", "apple"]],
+  B: ["buh", ["⚽", "ball"]],
+  C: ["kuh", ["🐱", "cat"]],
+  D: ["duh", ["🐶", "dog"]],
+  E: ["eh", ["🥚", "egg"]],
+  F: ["fff", ["🐟", "fish"]],
+  G: ["guh", ["🍇", "grapes"]],
+  H: ["hhh", ["🎩", "hat"]],
+  I: ["ih", ["🦎", "iguana"]],
+  J: ["juh", ["🧃", "juice"]],
+  K: ["kuh", ["🪁", "kite"]],
+  L: ["lll", ["🦁", "lion"]],
+  M: ["mmm", ["🌙", "moon"]],
+  N: ["nnn", ["👃", "nose"]],
+  O: ["ah", ["🐙", "octopus"]],
+  P: ["puh", ["🐷", "pig"]],
+  Q: ["kwuh", ["👸", "queen"]],
+  R: ["rrr", ["🌈", "rainbow"]],
+  S: ["sss", ["☀️", "sun"]],
+  T: ["tuh", ["🐯", "tiger"]],
+  U: ["uh", ["☂️", "umbrella"]],
+  V: ["vvv", ["🎻", "violin"]],
+  W: ["wuh", ["🍉", "watermelon"]],
+  X: ["ks", ["📦", "box"]],
+  Y: ["yuh", ["🪀", "yo-yo"]],
+  Z: ["zzz", ["🦓", "zebra"]],
+};
+
+export const soundOf = (letter: string) => LETTERS[letter.toUpperCase()]?.[0] ?? letter;
