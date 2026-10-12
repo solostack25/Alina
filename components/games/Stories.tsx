@@ -131,13 +131,18 @@ export default function Stories({ ask, win, name }: GameProps) {
           <div className="shelf">
             {STORIES.filter((s) => s.series === "super").map((s) => (
               <button key={s.id} className="book super-book" style={{ ["--book" as string]: s.color }} onClick={() => open(s)}>
-                <span className="book-faces" aria-hidden>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={HEROES.big.face} alt="" />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={HEROES.little.face} alt="" />
-                  <span className="book-badge">{s.cover}</span>
-                </span>
+                {s.coverImg ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="book-art" src={s.coverImg} alt="" />
+                ) : (
+                  <span className="book-faces" aria-hidden>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={HEROES.big.face} alt="" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={HEROES.little.face} alt="" />
+                    <span className="book-badge">{s.cover}</span>
+                  </span>
+                )}
                 <span className="book-title">{fill(s.title, name, alina, liyana)}</span>
               </button>
             ))}
@@ -169,24 +174,41 @@ export default function Stories({ ask, win, name }: GameProps) {
   }
 
   const p = story.pages[page];
+  const nextImg = story.pages[page + 1]?.img;
   return (
     <div className="stage reader">
-      <div className="page" style={{ background: p.bg }} key={page}>
-        <div className={`page-art${p.heroes?.length ? " with-heroes" : ""}`}>
-          {p.heroes?.map((h, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={h + i} className={`page-hero ${h === "a" ? "hero-a" : "hero-l"}`} src={HEROES[h === "a" ? "big" : "little"].hero} alt="" draggable={false} />
-          ))}
-          <span className="page-emoji">{p.art}</span>
-        </div>
-        <p className={`page-text${p.dark || DARK.includes(p.bg) ? " light" : ""}`}>
+      {p.img ? (
+        <div className="page illustrated" key={page}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="page-illo" src={p.img} alt="" draggable={false} />
+          <p className="page-text">
           {words.map((w, i) => (
             <button key={i} className={`word${i === hi ? " hi" : ""}`} onClick={() => tapWord(i)}>
               {w.word}
             </button>
           ))}
-        </p>
-      </div>
+          </p>
+        </div>
+      ) : (
+      <div className="page" style={{ background: p.bg }} key={page}>
+          <div className={`page-art${p.heroes?.length ? " with-heroes" : ""}`}>
+            {p.heroes?.map((h, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={h + i} className={`page-hero ${h === "a" ? "hero-a" : "hero-l"}`} src={HEROES[h === "a" ? "big" : "little"].hero} alt="" draggable={false} />
+            ))}
+            <span className="page-emoji">{p.art}</span>
+          </div>
+          <p className={`page-text${p.dark || DARK.includes(p.bg) ? " light" : ""}`}>
+            {words.map((w, i) => (
+              <button key={i} className={`word${i === hi ? " hi" : ""}`} onClick={() => tapWord(i)}>
+                {w.word}
+              </button>
+            ))}
+          </p>
+        </div>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {nextImg && nextImg !== p.img && <img src={nextImg} alt="" className="preload" aria-hidden />}
       <div className="page-nav">
         <button className="arrow" aria-label="Back a page" onClick={() => turn(-1)} disabled={page === 0}>◀</button>
         <button className="arrow read" aria-label="Read it again" onClick={() => read(text)}>🔊</button>
