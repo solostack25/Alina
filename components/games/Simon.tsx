@@ -85,7 +85,7 @@ export default function Simon({ ask, win, miss, level }: GameProps) {
 
   return (
     <div className="stage">
-      <div className={`simon ${phase}`}>
+      <div className={`simon simon-${phase}`}>
         {PADS.map((p, i) => (
           <button
             key={p.name}
