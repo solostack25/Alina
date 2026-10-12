@@ -6,6 +6,7 @@ import { sfx } from "@/lib/sfx";
 import { HEROES } from "@/lib/heroes";
 import { LETTERS } from "@/lib/letters";
 import { pick, shuffle } from "@/lib/util";
+import Kart from "../Kart";
 import type { GameProps } from "../types";
 
 /**
@@ -232,8 +233,7 @@ export default function LetterRace(props: GameProps) {
         ))}
         <div className={`racer${boost ? " boosting" : ""}`} key={`r${boost}-${oops}`} style={{ top: laneTop(lane) }} data-oops={oops ? "1" : ""}>
           <div className="racer-trail" aria-hidden />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={hero.hero} alt={`${name} racing`} draggable={false} />
+          <Kart player={player} />
         </div>
         {finished && (
           <div className="finish" aria-hidden>

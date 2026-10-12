@@ -8,6 +8,7 @@ import { pick, store } from "@/lib/util";
 import type { Activity, BigGame, GameId, GameProps, LittleGame, Player } from "./types";
 import Pip from "./Pip";
 import HeroSwoop from "./HeroSwoop";
+import Kart from "./Kart";
 import { HEROES } from "@/lib/heroes";
 import Balloons from "./games/Balloons";
 import Counting from "./games/Counting";
@@ -363,8 +364,7 @@ export default function Playtime() {
               </span>
               <span className="race-door-art" aria-hidden>
                 <span className="rd-letters">A b C</span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={HEROES[player].hero} alt="" draggable={false} />
+                <Kart player={player} />
               </span>
             </button>
             </div>

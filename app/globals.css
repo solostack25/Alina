@@ -644,3 +644,23 @@ img.mini { object-fit: cover; padding: 0; border: 3px solid #fff; }
 .race-pic { position: absolute; right: 14px; top: 64px; z-index: 4; font-size: clamp(50px, 9vw, 86px); background: rgba(255, 255, 255, .92); border-radius: 26px; padding: 4px 14px; box-shadow: 0 6px 0 rgba(0, 0, 0, .15); animation: land .45s cubic-bezier(.3, 1.6, .5, 1); }
 .finish { position: absolute; inset: 0; display: grid; place-items: center; background: repeating-conic-gradient(rgba(255, 255, 255, .12) 0 25%, rgba(0, 0, 0, .12) 0 50%) 0 0 / 60px 60px; z-index: 5; pointer-events: none; }
 .trophy { font-size: clamp(100px, 20vw, 180px); animation: friendPop .7s cubic-bezier(.3, 1.6, .5, 1) both, bob 2s ease-in-out .7s infinite; filter: drop-shadow(0 10px 10px rgba(0, 0, 0, .3)); }
+
+/* ---------- go-kart ---------- */
+.kart { display: block; width: 100%; height: 100%; overflow: visible; }
+.kart .kart-wheel { animation: kartSpin .45s linear infinite; }
+@keyframes kartSpin { to { transform: rotate(360deg); } }
+.kart .kart-puffs { animation: kartPuff .6s ease-out infinite; }
+@keyframes kartPuff { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-26px); opacity: 0; } }
+.kart .kart-flame { opacity: 0; transform-box: fill-box; transform-origin: right center; }
+.racer.boosting .kart .kart-flame { animation: kartFlame .12s ease-in-out infinite alternate, kartFlameOut 1.3s forwards; }
+.racer.boosting .kart .kart-wheel { animation-duration: .18s; }
+@keyframes kartFlame { from { transform: scaleX(.7); } to { transform: scaleX(1.25); } }
+@keyframes kartFlameOut { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.racer { width: clamp(150px, 20vw, 240px); aspect-ratio: 250 / 160; translate: -50% -66%; }
+.racer .kart { animation: kartBump .35s ease-in-out infinite alternate; filter: drop-shadow(0 10px 8px rgba(0, 0, 0, .3)); }
+@keyframes kartBump { to { transform: translateY(-3px) rotate(-1deg); } }
+.racer[data-oops="1"] .kart { animation: wob .45s, kartBump .35s ease-in-out .45s infinite alternate; }
+.racer-trail { right: 82%; top: 62%; height: 18%; }
+.race-door-art { aspect-ratio: 250 / 160; height: auto; width: min(52%, 250px); bottom: 6px; }
+.race-door-art .kart { filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .3)); animation: kartBump .35s ease-in-out infinite alternate; }
+.rd-letters { right: 100%; top: 10%; }
