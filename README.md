@@ -4,7 +4,13 @@ Learning games for a four-year-old who is just starting to read. Every instructi
 
 ## Who's playing?
 
-The app opens on a "Who's playing?" screen. Each girl has her own name, stars and levels.
+The app opens on a "Who's playing?" screen. Each girl has her own name, stars, stickers and levels. **Pip**, a little owl, is the guide: he talks, blinks and flaps while the app speaks.
+
+### For both girls
+
+- **Story Time**: read-along books. Each word lights up as it's read, and she can tap any word to hear it. Includes "Alina's Big Day," a birthday story about her.
+- **Coloring**: pick a color, tap a part of the picture to fill it. Cake, fish, house, butterfly. Saved per girl.
+- **Sticker Book**: spend stars on stickers (1 to 6 stars each), then drag them around garden, ocean and space scenes. Drag to the trash can to remove.
 
 ### Alina's Big Games (twilight theme, they level up)
 
@@ -18,6 +24,8 @@ Three right answers in a row moves a game up a level. Dots on each game door sho
 | **Math** | Count the groups and pick the answer | Add to 5, add to 10, take away (birds fly off), then mixed |
 | **Patterns** | "What comes next?" | AB, then AAB/ABC, then ABB/AABB, then ABCD |
 | **Odd One Out** | "Which one doesn't belong?" | 4 items, then 5, then look-alikes (fruit vs. treats, pets vs. sea animals) |
+| **Feed the Monster** | Drag the right food into the monster's mouth | By color, then first sound, then rhymes, then feed exactly N |
+| **Puzzles** | Drag pieces onto the board | 4 pieces with a guide picture, then 6, then 9 with no guide |
 
 ### Little sister's games (simple, no levels)
 

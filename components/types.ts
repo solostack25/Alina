@@ -3,8 +3,10 @@ export type Player = "big" | "little";
 /** Little sister's games (simple, no levels). */
 export type LittleGame = "balloons" | "count" | "letters" | "shapes";
 /** Alina's games (harder, they level up). */
-export type BigGame = "memory" | "simon" | "spell" | "math" | "patterns" | "odd";
-export type GameId = LittleGame | BigGame;
+export type BigGame = "memory" | "simon" | "spell" | "math" | "patterns" | "odd" | "feed" | "puzzle";
+/** Things both girls can do. */
+export type Activity = "stickers" | "stories" | "coloring";
+export type GameId = LittleGame | BigGame | Activity;
 
 export type GameProps = {
   /** Show a short prompt in the bubble and say the longer spoken version. */
@@ -13,8 +15,11 @@ export type GameProps = {
   win: (spoken?: string) => void;
   /** A wrong answer. Resets the level-up streak. */
   miss: () => void;
+  /** Spend stars (sticker shop). Returns false if there aren't enough. */
+  spend: (n: number) => boolean;
   stars: number;
   name: string;
+  player: Player;
   /** 1-based difficulty for leveled games. */
   level: number;
 };

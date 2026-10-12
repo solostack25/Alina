@@ -5,7 +5,8 @@ import { say } from "@/lib/voice";
 import { sfx } from "@/lib/sfx";
 import { attachConfetti, confetti } from "@/lib/confetti";
 import { pick, store } from "@/lib/util";
-import type { BigGame, GameId, GameProps, LittleGame, Player } from "./types";
+import type { Activity, BigGame, GameId, GameProps, LittleGame, Player } from "./types";
+import Pip from "./Pip";
 import Balloons from "./games/Balloons";
 import Counting from "./games/Counting";
 import Letters from "./games/Letters";
@@ -16,6 +17,11 @@ import Spell from "./games/Spell";
 import MathGame from "./games/MathGame";
 import Patterns from "./games/Patterns";
 import OddOneOut from "./games/OddOneOut";
+import Feed from "./games/Feed";
+import Puzzle from "./games/Puzzle";
+import Stickers from "./games/Stickers";
+import Stories from "./games/Stories";
+import Coloring from "./games/Coloring";
 
 const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!", "Amazing!", "So smart!"];
 const DEFAULT_NAMES: Record<Player, string> = { big: "Alina", little: "Sister" };
@@ -34,11 +40,20 @@ const BIG_DOORS: { id: BigGame; label: string; art: string; cls: string; max: nu
   { id: "math", label: "Math", art: "➕", cls: "b4", max: 4, spoken: "Math" },
   { id: "patterns", label: "Patterns", art: "🔁", cls: "b5", max: 4, spoken: "Patterns" },
   { id: "odd", label: "Odd One Out", art: "🧐", cls: "b6", max: 3, spoken: "Odd one out" },
+  { id: "feed", label: "Feed the Monster", art: "👾", cls: "b7", max: 4, spoken: "Feed the monster" },
+  { id: "puzzle", label: "Puzzles", art: "🧩", cls: "b8", max: 3, spoken: "Puzzles" },
+];
+
+const ACTIVITIES: { id: Activity; label: string; art: string; cls: string }[] = [
+  { id: "stories", label: "Story Time", art: "📖", cls: "a1" },
+  { id: "coloring", label: "Coloring", art: "🖍️", cls: "a2" },
+  { id: "stickers", label: "Stickers", art: "🌟", cls: "a3" },
 ];
 
 const GAMES: Record<GameId, (p: GameProps) => React.ReactNode> = {
   balloons: Balloons, count: Counting, letters: Letters, shapes: Shapes,
-  memory: Memory, simon: Simon, spell: Spell, math: MathGame, patterns: Patterns, odd: OddOneOut,
+  memory: Memory, simon: Simon, spell: Spell, math: MathGame, patterns: Patterns, odd: OddOneOut, feed: Feed, puzzle: Puzzle,
+  stickers: Stickers, stories: Stories, coloring: Coloring,
 };
 
 /** Wins in a row needed to level up. */
@@ -61,6 +76,8 @@ export default function Playtime() {
   const streak = useRef(0);
   const holdTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const unlocked = useRef(false);
+  const starsRef = useRef(stars);
+  starsRef.current = stars;
   const birthdaySaid = useRef<Record<Player, boolean>>({ big: false, little: false });
 
   useEffect(() => {
@@ -97,8 +114,17 @@ export default function Playtime() {
     const door = BIG_DOORS.find((d) => d.id === game);
     return {
       name,
+      player,
       stars: stars[player],
       level,
+      spend: (n) => {
+        if (!live() || starsRef.current[player] < n) return false;
+        const next = { ...starsRef.current, [player]: starsRef.current[player] - n };
+        starsRef.current = next;
+        setStars(next);
+        store.set("stars2", next);
+        return true;
+      },
       ask: (text, spoken, color) => {
         if (!live()) return;
         setPrompt({ text, spoken: spoken ?? text, color });
@@ -145,7 +171,7 @@ export default function Playtime() {
     };
     // Rebuilt per screen and when the level changes; games read props at the start of each round.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, name, level, player]);
+  }, [screen, name, level, player, stars[player]]);
 
   useEffect(() => {
     if (!cheer) return;
@@ -192,6 +218,7 @@ export default function Playtime() {
 
       {screen === "who" && (
         <section className="screen who">
+          <Pip size={110} className="who-pip" />
           <h1 className="bigtitle">
             <span>Play</span> <span className="berry">Time</span>
           </h1>
@@ -229,39 +256,59 @@ export default function Playtime() {
               onClick={() => {
                 sfx.boop();
                 go("who");
-                say("Who's playing?");
+                say("Hi! I'm Pip. Who's playing?");
               }}
             >
               <span className={`mini ${player}`}>{(name || "?")[0].toUpperCase()}</span>
             </button>
             <Stars n={stars[player]} />
           </div>
-          <p className="hello">{player === "big" ? `${name}'s Big Games` : `Hi ${name}! Let's play!`}</p>
-          <div className={`doors ${player === "big" ? "six" : ""}`}>
-            {doors.map((d) => {
-              const lv = levels[`${player}:${d.id}`] ?? 1;
-              const max = "max" in d ? d.max : 0;
-              return (
+          <div className="home-scroll">
+            <div className="greet">
+              <Pip size={92} />
+              <p className="hello">{player === "big" ? `${name}'s Big Games` : `Hi ${name}! Let's play!`}</p>
+            </div>
+            <div className="acts">
+              {ACTIVITIES.map((a) => (
                 <button
-                  key={d.id}
-                  className={`door ${d.cls}`}
+                  key={a.id}
+                  className={`act ${a.cls}`}
                   onClick={() => {
                     sfx.pop();
-                    go(d.id);
+                    go(a.id);
                   }}
                 >
-                  <span className="art">{d.art}</span>
-                  {d.label}
-                  {max > 0 && (
-                    <span className="lvl" aria-label={`Level ${lv} of ${max}`}>
-                      {Array.from({ length: max }, (_, i) => (
-                        <i key={i} className={i < lv ? "on" : ""} />
-                      ))}
-                    </span>
-                  )}
+                  <span className="art">{a.art}</span>
+                  {a.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+            <div className={`doors ${player === "big" ? "eight" : ""}`}>
+              {doors.map((d) => {
+                const lv = levels[`${player}:${d.id}`] ?? 1;
+                const max = "max" in d ? d.max : 0;
+                return (
+                  <button
+                    key={d.id}
+                    className={`door ${d.cls}`}
+                    onClick={() => {
+                      sfx.pop();
+                      go(d.id);
+                    }}
+                  >
+                    <span className="art">{d.art}</span>
+                    {d.label}
+                    {max > 0 && (
+                      <span className="lvl" aria-label={`Level ${lv} of ${max}`}>
+                        {Array.from({ length: max }, (_, i) => (
+                          <i key={i} className={i < lv ? "on" : ""} />
+                        ))}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
@@ -280,6 +327,7 @@ export default function Playtime() {
               🏠
             </button>
             <div className="prompt">
+              <Pip size={64} className="bar-pip" />
               <button
                 className="ask"
                 aria-label="Say it again"

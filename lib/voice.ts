@@ -20,22 +20,66 @@ if (typeof window !== "undefined" && "speechSynthesis" in window) {
   speechSynthesis.onvoiceschanged = pickVoice;
 }
 
-export function say(text: string, opts: { queue?: boolean; rate?: number; pitch?: number } = {}) {
+// Lets Pip move his mouth while the app is talking.
+type Listener = (speaking: boolean) => void;
+const listeners = new Set<Listener>();
+let pending = 0;
+let gen = 0; // bumps on cancel so interrupted lines don't stop the mouth early
+function setSpeaking(on: boolean) {
+  listeners.forEach((l) => l(on));
+}
+export function onSpeaking(l: Listener) {
+  listeners.add(l);
+  return () => {
+    listeners.delete(l);
+  };
+}
+
+export type SayOptions = {
+  queue?: boolean;
+  rate?: number;
+  pitch?: number;
+  /** Called with the character index of each word as it is spoken (where the browser supports it). */
+  onWord?: (charIndex: number) => void;
+  onEnd?: () => void;
+};
+
+export function say(text: string, opts: SayOptions = {}) {
   try {
-    if (!opts.queue) speechSynthesis.cancel();
+    if (!opts.queue) {
+      speechSynthesis.cancel();
+      pending = 0;
+      gen++;
+    }
+    const mine = gen;
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
     u.rate = opts.rate ?? 0.9;
     u.pitch = opts.pitch ?? 1.25;
+    pending++;
+    u.onstart = () => setSpeaking(true);
+    const done = () => {
+      if (mine === gen) {
+        pending = Math.max(0, pending - 1);
+        if (!pending) setSpeaking(false);
+      }
+      opts.onEnd?.();
+    };
+    u.onend = done;
+    u.onerror = done;
+    if (opts.onWord) u.onboundary = (e) => e.name !== "sentence" && opts.onWord!(e.charIndex);
     speechSynthesis.speak(u);
   } catch {
-    /* speech not available */
+    opts.onEnd?.();
   }
 }
 
 export function hush() {
   try {
     speechSynthesis.cancel();
+    pending = 0;
+    gen++;
+    setSpeaking(false);
   } catch {
     /* ignore */
   }
