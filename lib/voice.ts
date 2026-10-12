@@ -133,7 +133,7 @@ function getBuffer(ctx: AudioContext, text: string, speed: number) {
   const k = `${speed}|${text}`;
   let p = buffers.get(k);
   if (!p) {
-    p = fetch(`/api/tts?t=${encodeURIComponent(text)}&s=${speed}`).then(async (res) => {
+    p = fetch(`/api/tts?t=${encodeURIComponent(text)}&s=${speed}&v=${encodeURIComponent(process.env.NEXT_PUBLIC_TTS_VOICE ?? "default")}`).then(async (res) => {
       if (res.status === 503) cloud = "off";
       if (!res.ok) throw new Error(`tts ${res.status}`);
       cloud = "on";
