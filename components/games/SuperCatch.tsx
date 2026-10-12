@@ -63,12 +63,18 @@ export default function SuperCatch(props: GameProps) {
   // Little sister gets slower drops. Alina's speed up with each level.
   const speed = player === "little" ? 9 : 11 + level * 3; // % of stage height per second
 
-  const [heroX, setHeroX] = useState(50);
-  const [drops, setDrops] = useState<Drop[]>([]);
+  type DropView = Pick<Drop, "id" | "value" | "hex">;
+  const [dropViews, setDropViews] = useState<DropView[]>([]);
   const [caught, setCaught] = useState(0);
   const [pose, setPose] = useState<"" | "yay" | "oops">("");
   const stage = useRef<HTMLDivElement>(null);
-  const heroXRef = useRef(50);
+  const heroEl = useRef<HTMLDivElement>(null);
+  const dropEls = useRef(new Map<number, HTMLDivElement>());
+  const size = useRef({ w: 1, h: 1 });
+  // Where her finger is, and where the hero actually is (it glides toward the finger every frame).
+  const fingerX = useRef(50);
+  const heroX = useRef(50);
+  const pressing = useRef(false);
   const target = useRef<Target>(makeTarget(kind));
   const caughtRef = useRef(0);
   const paused = useRef(false);
@@ -76,18 +82,29 @@ export default function SuperCatch(props: GameProps) {
   const dropsRef = useRef<Drop[]>([]);
   const sinceRight = useRef(0);
 
+  const syncViews = () => setDropViews(dropsRef.current.map(({ id, value, hex }) => ({ id, value, hex })));
+
   const newRound = () => {
     target.current = makeTarget(kind);
     caughtRef.current = 0;
     setCaught(0);
     dropsRef.current = [];
-    setDrops([]);
+    syncViews();
     paused.current = false;
     const t = target.current;
     ask(t.prompt, `${t.spoken} Move ${name || "your hero"} to catch them!`, t.hex ? { bg: t.hex, fg: t.value === "yellow" ? "#2b2350" : "#fff" } : undefined);
   };
 
   useEffect(() => {
+    const el = stage.current!;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      size.current = { w: r.width || 1, h: r.height || 1 };
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+
     newRound();
     let raf = 0;
     let last = performance.now();
@@ -95,33 +112,48 @@ export default function SuperCatch(props: GameProps) {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      const { w, h } = size.current;
+
+      // Hero glides toward her finger: quick but smooth, no jitter.
+      heroX.current += (fingerX.current - heroX.current) * (1 - Math.exp(-dt * 20));
+      if (heroEl.current) heroEl.current.style.transform = `translate3d(${(heroX.current / 100) * w}px,0,0) translateX(-50%)`;
+
       if (!paused.current) {
         spawnIn -= dt * 1000;
-        let next = dropsRef.current
-          .map((d) => (d.caught ? d : { ...d, y: d.y + d.v * dt }))
-          .filter((d) => d.y < 112);
+        let changed = false;
+        for (const d of dropsRef.current) d.y += d.v * dt;
+        const before = dropsRef.current.length;
+        dropsRef.current = dropsRef.current.filter((d) => d.y < 112);
+        if (dropsRef.current.length !== before) changed = true;
         if (spawnIn <= 0) {
           spawnIn = player === "little" ? 1250 : Math.max(650, 1150 - level * 120);
           // Make sure a right one shows up at least every third drop.
           const d = makeDrop(target.current, nextId.current++, speed, sinceRight.current >= 2);
           sinceRight.current = d.value === target.current.value ? 0 : sinceRight.current + 1;
-          next.push(d);
+          dropsRef.current.push(d);
+          changed = true;
         }
         // Catch zone: near the hero's hands, around 80% down the stage.
-        const hits: Drop[] = [];
-        next = next.flatMap((d) => {
-          if (d.caught || d.y < 70 || d.y > 88 || Math.abs(d.x - heroXRef.current) > 11) return [d];
-          hits.push(d);
-          return [];
-        });
-        dropsRef.current = next;
-        setDrops(next);
+        const hits = dropsRef.current.filter((d) => d.y >= 70 && d.y <= 88 && Math.abs(d.x - heroX.current) <= 11);
+        if (hits.length) {
+          dropsRef.current = dropsRef.current.filter((d) => !hits.includes(d));
+          changed = true;
+        }
+        // Move the stars on the GPU; React only re-renders when one appears or goes away.
+        for (const d of dropsRef.current) {
+          const de = dropEls.current.get(d.id);
+          if (de) de.style.transform = `translate3d(${(d.x / 100) * w}px,${(d.y / 100) * h}px,0) translate(-50%,-50%) rotate(${d.spin}deg)`;
+        }
+        if (changed) syncViews();
         hits.forEach((d) => onCatch(d.value === target.current.value, d));
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onCatch = (ok: boolean, d: Drop) => {
@@ -147,12 +179,10 @@ export default function SuperCatch(props: GameProps) {
     }
   };
 
-  const moveTo = (clientX: number) => {
+  const aim = (clientX: number) => {
     const r = stage.current?.getBoundingClientRect();
     if (!r) return;
-    const x = Math.max(8, Math.min(92, ((clientX - r.left) / r.width) * 100));
-    heroXRef.current = x;
-    setHeroX(x);
+    fingerX.current = Math.max(8, Math.min(92, ((clientX - r.left) / r.width) * 100));
   };
 
   return (
@@ -160,12 +190,17 @@ export default function SuperCatch(props: GameProps) {
       className={`stage catch ${hero.power}`}
       ref={stage}
       onPointerDown={(e) => {
-        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-        moveTo(e.clientX);
+        // Hold onto the whole play area, so touching a falling star never steals the drag.
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        pressing.current = true;
+        aim(e.clientX);
       }}
       onPointerMove={(e) => {
-        if (e.buttons || e.pointerType !== "mouse") moveTo(e.clientX);
+        if (pressing.current || e.pointerType === "mouse") aim(e.clientX);
       }}
+      onPointerUp={() => (pressing.current = false)}
+      onPointerCancel={() => (pressing.current = false)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div className="catch-count" aria-label={`${caught} of ${GOAL} caught`}>
         {Array.from({ length: GOAL }, (_, i) => (
@@ -174,24 +209,27 @@ export default function SuperCatch(props: GameProps) {
           </span>
         ))}
       </div>
-      {drops
-        .map((d) => (
-          <div
-            key={d.id}
-            className={`drop ${hero.power}`}
-            style={{ left: `${d.x}%`, top: `${d.y}%`, ["--c" as string]: d.hex, rotate: `${d.spin}deg` }}
-          >
-            <svg viewBox="0 0 100 100" aria-hidden>
-              {hero.power === "stars" ? (
-                <path d="M50 4 L62 36 L96 37 L69 58 L79 92 L50 72 L21 92 L31 58 L4 37 L38 36 Z" />
-              ) : (
-                <path d="M50 90 C10 62 4 40 14 24 C24 8 44 10 50 28 C56 10 76 8 86 24 C96 40 90 62 50 90 Z" />
-              )}
-            </svg>
-            {kind !== "color" && <b>{d.value}</b>}
-          </div>
-        ))}
-      <div className={`catcher ${pose}`} style={{ left: `${heroX}%` }}>
+      {dropViews.map((d) => (
+        <div
+          key={d.id}
+          ref={(el) => {
+            if (el) dropEls.current.set(d.id, el);
+            else dropEls.current.delete(d.id);
+          }}
+          className={`drop ${hero.power}`}
+          style={{ ["--c" as string]: d.hex, transform: "translate3d(-200px,-200px,0)" }}
+        >
+          <svg viewBox="0 0 100 100" aria-hidden>
+            {hero.power === "stars" ? (
+              <path d="M50 4 L62 36 L96 37 L69 58 L79 92 L50 72 L21 92 L31 58 L4 37 L38 36 Z" />
+            ) : (
+              <path d="M50 90 C10 62 4 40 14 24 C24 8 44 10 50 28 C56 10 76 8 86 24 C96 40 90 62 50 90 Z" />
+            )}
+          </svg>
+          {kind !== "color" && <b>{d.value}</b>}
+        </div>
+      ))}
+      <div className={`catcher ${pose}`} ref={heroEl}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={hero.hero} alt={`${name} the superhero`} draggable={false} />
       </div>
