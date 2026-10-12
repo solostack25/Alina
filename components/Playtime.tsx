@@ -26,6 +26,7 @@ import Stories from "./games/Stories";
 import Coloring from "./games/Coloring";
 import SuperCatch from "./games/SuperCatch";
 import SpaceBots from "./games/SpaceBots";
+import LetterRace from "./games/LetterRace";
 import Robot, { DEFAULT_ROBOT, type RobotConfig } from "./Robot";
 
 const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!", "Amazing!", "So smart!"];
@@ -58,11 +59,13 @@ const ACTIVITIES: { id: Activity; label: string; art: string; cls: string }[] = 
 const GAMES: Record<GameId, (p: GameProps) => React.ReactNode> = {
   balloons: Balloons, count: Counting, letters: Letters, shapes: Shapes,
   memory: Memory, simon: Simon, spell: Spell, math: MathGame, patterns: Patterns, odd: OddOneOut, feed: Feed, puzzle: Puzzle,
-  stickers: Stickers, stories: Stories, coloring: Coloring, catch: SuperCatch, bots: SpaceBots,
+  stickers: Stickers, stories: Stories, coloring: Coloring, catch: SuperCatch, bots: SpaceBots, race: LetterRace,
 };
 
 /** Super Catch levels up for Alina only: colors, numbers, letter sounds. */
 const CATCH_MAX = 3;
+/** Featured games that level up for Alina (and how many levels). */
+const HERO_LEVELS: Record<string, number> = { catch: 3, bots: 3, race: 4 };
 
 /** Wins in a row needed to level up. */
 const STREAK_TO_LEVEL = 3;
@@ -106,7 +109,7 @@ export default function Playtime() {
 
   const name = names[player];
   const isBig = (g: Screen): g is BigGame => BIG_DOORS.some((d) => d.id === g);
-  const showsLevel = isBig(screen) || ((screen === "catch" || screen === "bots") && player === "big");
+  const showsLevel = isBig(screen) || (screen in HERO_LEVELS && player === "big");
   const levelKey = `${player}:${screen}`;
   const level = levels[levelKey] ?? 1;
 
@@ -125,7 +128,7 @@ export default function Playtime() {
     const mine = session.current;
     const live = () => session.current === mine;
     const game = screen;
-    const door = BIG_DOORS.find((d) => d.id === game) ?? ((game === "catch" || game === "bots") && player === "big" ? { max: CATCH_MAX } : undefined);
+    const door = BIG_DOORS.find((d) => d.id === game) ?? (game in HERO_LEVELS && player === "big" ? { max: HERO_LEVELS[game] } : undefined);
     return {
       name,
       player,
@@ -338,6 +341,30 @@ export default function Playtime() {
               </span>
               <span className="door-bot">
                 <Robot config={store.get<{ robot: RobotConfig }>(`bots:${player}`, { robot: DEFAULT_ROBOT }).robot} />
+              </span>
+            </button>
+            <button
+              className={`hero-door race-door ${player}`}
+              onClick={() => {
+                sfx.pop();
+                go("race");
+              }}
+            >
+              <span className="hero-door-text">
+                <span className="hd-title">Letter Race</span>
+                <span className="hd-sub">🏁 Zoom through the ABCs!</span>
+                {player === "big" && (
+                  <span className="lvl" aria-label={`Level ${levels["big:race"] ?? 1} of 4`}>
+                    {Array.from({ length: 4 }, (_, i) => (
+                      <i key={i} className={i < (levels["big:race"] ?? 1) ? "on" : ""} />
+                    ))}
+                  </span>
+                )}
+              </span>
+              <span className="race-door-art" aria-hidden>
+                <span className="rd-letters">A b C</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={HEROES[player].hero} alt="" draggable={false} />
               </span>
             </button>
             </div>

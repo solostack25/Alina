@@ -187,7 +187,7 @@ export default function SuperCatch(props: GameProps) {
 
   return (
     <div
-      className={`stage catch ${hero.power}`}
+      className={`stage catch power-${hero.power}`}
       ref={stage}
       onPointerDown={(e) => {
         // Hold onto the whole play area, so touching a falling star never steals the drag.
@@ -216,7 +216,7 @@ export default function SuperCatch(props: GameProps) {
             if (el) dropEls.current.set(d.id, el);
             else dropEls.current.delete(d.id);
           }}
-          className={`drop ${hero.power}`}
+          className={`drop power-${hero.power}`}
           style={{ ["--c" as string]: d.hex, transform: "translate3d(-200px,-200px,0)" }}
         >
           <svg viewBox="0 0 100 100" aria-hidden>
