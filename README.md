@@ -8,6 +8,9 @@ The app opens on a "Who's playing?" screen. Each girl has her own name, stars, s
 
 ### For both girls
 
+- **Super Catch**: each girl is a superhero (from the family's illustration in `public/heroes`). She drags her hero along the bottom to catch the falling stars or hearts Pip calls out. Liyana catches colors; Alina levels up from colors to numbers to letter sounds.
+- **Hero celebrations**: every right answer, her superhero swoops in with a burst of stars (Alina) or hearts (Liyana). Their faces are on the "Who's playing?" screen too.
+
 - **Story Time**: read-along books. Each word lights up as it's read, and she can tap any word to hear it. Includes "Alina's Big Day," a birthday story about her.
 - **Coloring**: pick a color, tap a part of the picture to fill it. Cake, fish, house, butterfly. Saved per girl.
 - **Sticker Book**: spend stars on stickers (1 to 6 stars each), then drag them around garden, ocean and space scenes. Drag to the trash can to remove.

@@ -6,7 +6,9 @@ export type LittleGame = "balloons" | "count" | "letters" | "shapes";
 export type BigGame = "memory" | "simon" | "spell" | "math" | "patterns" | "odd" | "feed" | "puzzle";
 /** Things both girls can do. */
 export type Activity = "stickers" | "stories" | "coloring";
-export type GameId = LittleGame | BigGame | Activity;
+/** Superhero game both girls play (levels up for Alina). */
+export type HeroGame = "catch";
+export type GameId = LittleGame | BigGame | Activity | HeroGame;
 
 export type GameProps = {
   /** Show a short prompt in the bubble and say the longer spoken version. */

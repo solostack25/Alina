@@ -7,6 +7,8 @@ import { attachConfetti, confetti } from "@/lib/confetti";
 import { pick, store } from "@/lib/util";
 import type { Activity, BigGame, GameId, GameProps, LittleGame, Player } from "./types";
 import Pip from "./Pip";
+import HeroSwoop from "./HeroSwoop";
+import { HEROES } from "@/lib/heroes";
 import Balloons from "./games/Balloons";
 import Counting from "./games/Counting";
 import Letters from "./games/Letters";
@@ -22,6 +24,7 @@ import Puzzle from "./games/Puzzle";
 import Stickers from "./games/Stickers";
 import Stories from "./games/Stories";
 import Coloring from "./games/Coloring";
+import SuperCatch from "./games/SuperCatch";
 
 const PRAISE = ["Yay!", "Great job!", "You did it!", "Wow!", "Super!", "Hooray!", "Amazing!", "So smart!"];
 const DEFAULT_NAMES: Record<Player, string> = { big: "Alina", little: "Liyana" };
@@ -53,8 +56,11 @@ const ACTIVITIES: { id: Activity; label: string; art: string; cls: string }[] = 
 const GAMES: Record<GameId, (p: GameProps) => React.ReactNode> = {
   balloons: Balloons, count: Counting, letters: Letters, shapes: Shapes,
   memory: Memory, simon: Simon, spell: Spell, math: MathGame, patterns: Patterns, odd: OddOneOut, feed: Feed, puzzle: Puzzle,
-  stickers: Stickers, stories: Stories, coloring: Coloring,
+  stickers: Stickers, stories: Stories, coloring: Coloring, catch: SuperCatch,
 };
+
+/** Super Catch levels up for Alina only: colors, numbers, letter sounds. */
+const CATCH_MAX = 3;
 
 /** Wins in a row needed to level up. */
 const STREAK_TO_LEVEL = 3;
@@ -95,6 +101,7 @@ export default function Playtime() {
 
   const name = names[player];
   const isBig = (g: Screen): g is BigGame => BIG_DOORS.some((d) => d.id === g);
+  const showsLevel = isBig(screen) || (screen === "catch" && player === "big");
   const levelKey = `${player}:${screen}`;
   const level = levels[levelKey] ?? 1;
 
@@ -113,7 +120,7 @@ export default function Playtime() {
     const mine = session.current;
     const live = () => session.current === mine;
     const game = screen;
-    const door = BIG_DOORS.find((d) => d.id === game);
+    const door = BIG_DOORS.find((d) => d.id === game) ?? (game === "catch" && player === "big" ? { max: CATCH_MAX } : undefined);
     return {
       name,
       player,
@@ -222,15 +229,18 @@ export default function Playtime() {
 
       {screen === "who" && (
         <section className="screen who">
-          <Pip size={110} className="who-pip" />
+          <div className="who-banner" aria-hidden />
           <h1 className="bigtitle">
-            <span>Play</span> <span className="berry">Time</span>
+            <span>Super</span> <span className="berry">Play</span> <span>Time</span>
           </h1>
-          <p className="whoask">Who&apos;s playing?</p>
+          <p className="whoask">
+            <Pip size={64} className="who-pip" /> Who&apos;s playing?
+          </p>
           <div className="players">
             {(["big", "little"] as Player[]).map((p) => (
               <button key={p} className={`player ${p}`} onClick={() => choosePlayer(p)} aria-label={`${names[p]} is playing`}>
-                <span className="avatar">{(names[p] || "?")[0].toUpperCase()}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="avatar" src={HEROES[p].face} alt="" draggable={false} />
                 <span className="pname">{names[p]}</span>
                 <span className="pstars">⭐ {stars[p]}</span>
               </button>
@@ -260,10 +270,11 @@ export default function Playtime() {
               onClick={() => {
                 sfx.boop();
                 go("who");
-                say("Hi! I'm Pip. Who's playing?");
+                say("Who's playing? Pick your superhero!");
               }}
             >
-              <span className={`mini ${player}`}>{(name || "?")[0].toUpperCase()}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className={`mini ${player}`} src={HEROES[player].face} alt="" draggable={false} />
             </button>
             <Stars n={stars[player]} />
           </div>
@@ -272,6 +283,27 @@ export default function Playtime() {
               <Pip size={92} />
               <p className="hello">{player === "big" ? `${name}'s Big Games` : `Hi ${name}! Let's play!`}</p>
             </div>
+            <button
+              className={`hero-door ${player}`}
+              onClick={() => {
+                sfx.pop();
+                go("catch");
+              }}
+            >
+              <span className="hero-door-text">
+                <span className="hd-title">Super Catch</span>
+                <span className="hd-sub">{HEROES[player].power === "stars" ? "⭐ Catch the stars! ⭐" : "💖 Catch the hearts! 💖"}</span>
+                {player === "big" && (
+                  <span className="lvl" aria-label={`Level ${levels["big:catch"] ?? 1} of ${CATCH_MAX}`}>
+                    {Array.from({ length: CATCH_MAX }, (_, i) => (
+                      <i key={i} className={i < (levels["big:catch"] ?? 1) ? "on" : ""} />
+                    ))}
+                  </span>
+                )}
+              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={HEROES[player].hero} alt="" draggable={false} />
+            </button>
             <div className="acts">
               {ACTIVITIES.map((a) => (
                 <button
@@ -341,11 +373,13 @@ export default function Playtime() {
                 🔊 {prompt.text}
               </button>
             </div>
-            {isBig(screen) ? <div className="levelpill">Lv {level}</div> : <Stars n={stars[player]} />}
+            {showsLevel ? <div className="levelpill">Lv {level}</div> : <Stars n={stars[player]} />}
           </div>
           <Game key={session.current} {...gameProps} />
         </section>
       )}
+
+      {cheer && screen !== "who" && screen !== "home" && <HeroSwoop key={`h${cheer.id}`} player={player} id={cheer.id} big={cheer.big} />}
 
       {cheer && (
         <div key={cheer.id} className={`cheer${cheer.big ? " big" : ""}`} aria-live="polite">
